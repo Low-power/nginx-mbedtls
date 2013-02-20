@@ -1,0 +1,70 @@
+
+# Copyright (C) Igor Sysoev
+# Copyright (C) Nginx, Inc.
+
+
+if [ $POLARSSL != NONE ]; then
+
+    case "$CC" in
+
+        cl | bcc32)
+            # Someone that cares should support windows.
+
+cat << END
+
+$0: error: Ngnix's PolarSSL support requires a non-cl/bcc32 compiler.
+The build infrastructure for PolarSSL support has not been written for cl or
+bcc32.  You can either use GCC or try using OpenSSL instead.
+
+END
+            exit 1
+        ;;
+
+        *)
+            have=NGX_POLARSSL . auto/have
+            have=NGX_SSL . auto/have
+
+            CORE_INCS="$CORE_INCS $POLARSSL/.polarssl/include"
+            CORE_DEPS="$CORE_DEPS $POLARSSL/.polarssl/include/polarssl/config.h"
+            CORE_LIBS="$CORE_LIBS $POLARSSL/.polarssl/lib/libpolarssl.a"
+            CORE_LIBS="$CORE_LIBS $NGX_LIBDL"
+        ;;
+    esac
+
+else
+
+    if [ "$NGX_PLATFORM" != win32 ]; then
+
+        POLARSSL=NO
+
+        ngx_feature="PolarSSL library"
+        ngx_feature_name="NGX_POLARSSL"
+        ngx_feature_run=no
+        ngx_feature_incs="#include <polarssl/config.h>
+                          #include <polarssl/ssl.h>"
+        ngx_feature_path=
+        ngx_feature_libs="-lpolarssl"
+        ngx_feature_test="ssl_context c; ssl_init(&c);"
+        . auto/feature
+
+        if [ $ngx_found = yes ]; then
+            have=NGX_SSL . auto/have
+            CORE_LIBS="$CORE_LIBS $ngx_feature_libs $NGX_LIBDL"
+            POLARSSL=YES
+        fi
+    fi
+
+    if [ $POLARSSL != YES ]; then
+
+cat << END
+
+$0: error: SSL modules require the PolarSSL library.
+You can either do not enable the modules, or install the PolarSSL library
+into the system, or build the PolarSSL library statically from the source
+with nginx by using --with-polarssl=<path> option.
+
+END
+        exit 1
+    fi
+
+fi

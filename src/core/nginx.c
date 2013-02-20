@@ -283,7 +283,7 @@ main(int argc, char *const *argv)
     }
 
     /* STUB */
-#if (NGX_OPENSSL)
+#if (NGX_OPENSSL) || (NGX_POLARSSL)
     ngx_ssl_init(log);
 #endif
 

@@ -117,8 +117,13 @@ PCRE_OPT=
 PCRE_CONF_OPT=
 PCRE_JIT=NO
 
+USE_SSL=NO
+
 USE_OPENSSL=NO
 OPENSSL=NONE
+
+USE_POLARSSL=NO
+POLARSSL=NONE
 
 USE_MD5=NO
 MD5=NONE
@@ -284,8 +289,13 @@ use the \"--without-http_limit_conn_module\" option instead"
         --with-pcre-opt=*)               PCRE_OPT="$value"          ;;
         --with-pcre-jit)                 PCRE_JIT=YES               ;;
 
+        --with-openssl)                  USE_OPENSSL=YES            ;;
         --with-openssl=*)                OPENSSL="$value"           ;;
         --with-openssl-opt=*)            OPENSSL_OPT="$value"       ;;
+
+        --with-polarssl)                 USE_POLARSSL=YES           ;;
+        --with-polarssl=*)               POLARSSL="$value"          ;;
+        --with-polarssl-opt=*)           POLARSSL_OPT="$value"      ;;
 
         --with-md5=*)                    MD5="$value"               ;;
         --with-md5-opt=*)                MD5_OPT="$value"           ;;
@@ -454,8 +464,13 @@ cat << END
   --with-libatomic                   force libatomic_ops library usage
   --with-libatomic=DIR               set path to libatomic_ops library sources
 
+  --with-openssl                     force OpenSSL library usage
   --with-openssl=DIR                 set path to OpenSSL library sources
   --with-openssl-opt=OPTIONS         set additional build options for OpenSSL
+
+  --with-polarssl                    force PolarSSL library usage
+  --with-polarssl=DIR                set path to PolarSSL library sources
+  --with-polarssl-opt=OPTIONS        set additional build options for PolarSSL
 
   --with-debug                       enable debug logging
 
