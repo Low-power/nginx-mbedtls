@@ -296,7 +296,7 @@ if [ $HTTP_REWRITE = YES -a $USE_PCRE != DISABLED ]; then
 fi
 
 if [ $HTTP_SSL = YES ]; then
-    USE_OPENSSL=YES
+    USE_SSL=YES
     have=NGX_HTTP_SSL . auto/have
     HTTP_MODULES="$HTTP_MODULES $HTTP_SSL_MODULE"
     HTTP_DEPS="$HTTP_DEPS $HTTP_SSL_DEPS"
@@ -420,17 +420,24 @@ fi
 
 if [ $MAIL_SSL = YES ]; then
     have=NGX_MAIL_SSL . auto/have
-    USE_OPENSSL=YES
+    USE_SSL=YES
 fi
 
 
 modules="$CORE_MODULES $EVENT_MODULES"
 
+if [ $USE_SSL = YES ]; then
+    if [ $OPENSSL != NONE -o $USE_OPENSSL = YES ]; then
+        modules="$modules $OPENSSL_MODULE"
+        CORE_DEPS="$CORE_DEPS $OPENSSL_DEPS"
+        CORE_SRCS="$CORE_SRCS $OPENSSL_SRCS"
+    fi
 
-if [ $USE_OPENSSL = YES ]; then
-    modules="$modules $OPENSSL_MODULE"
-    CORE_DEPS="$CORE_DEPS $OPENSSL_DEPS"
-    CORE_SRCS="$CORE_SRCS $OPENSSL_SRCS"
+    if [ $POLARSSL != NONE -o $USE_POLARSSL = YES ]; then
+        modules="$modules $POLARSSL_MODULE"
+        CORE_DEPS="$CORE_DEPS $POLARSSL_DEPS"
+        CORE_SRCS="$CORE_SRCS $POLARSSL_SRCS"
+    fi
 fi
 
 if [ $USE_PCRE = YES ]; then
