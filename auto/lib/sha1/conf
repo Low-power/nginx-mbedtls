@@ -69,6 +69,23 @@ else
             fi
         fi
 
+        if [ $ngx_found = no ]; then
+
+            # PolarSSL library
+
+            ngx_feature="PolarSSL library"
+            ngx_feature_incs="#include <polarssl/sha1.h>"
+            ngx_feature_libs="-lpolarssl"
+            . auto/feature
+
+            ngx_sha1_lib="system PolarSSL"
+
+            if [ $ngx_found = yes ]; then
+                have=NGX_HAVE_POLARSSL_SHA1_H . auto/have
+                have=NGX_POLARSSL_SHA1 . auto/have
+            fi
+        fi
+
         if [ $ngx_found = yes ]; then
             CORE_LIBS="$CORE_LIBS $ngx_feature_libs"
             SHA1=YES

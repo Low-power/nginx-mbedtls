@@ -93,6 +93,26 @@ else
             fi
         fi
 
+        if [ $ngx_found = no ]; then
+
+            # PolarSSL crypto library
+
+            ngx_feature="PolarSSL library"
+            ngx_feature_name="NGX_POLARSSL_MD5"
+            ngx_feature_incs="#include <polarssl/md5.h>"
+            ngx_feature_libs="-lpolarssl"
+            ngx_feature_test="md5_context md5; md5_starts(&md5)"
+            . auto/feature
+
+            ngx_md5_lib="system polarssl"
+
+            if [ $ngx_found = yes ]; then
+                have=NGX_HAVE_POLARSSL_MD5_H . auto/have
+                have=NGX_POLARSSL_MD5 . auto/have
+                have=NGX_HAVE_MD5 . auto/have
+            fi
+        fi
+
         if [ $ngx_found = yes ]; then
             CORE_LIBS="$CORE_LIBS $ngx_feature_libs"
             MD5=YES
