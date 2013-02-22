@@ -185,6 +185,8 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
         return NGX_ERROR;
     }
 
+    ssl->have_own_cert = 1;
+
     return NGX_OK;
 }
 
@@ -354,6 +356,14 @@ ngx_int_t
 ngx_ssl_cipher_list(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *ciphers)
 {
     return ngx_polarssl_set_cipher_list(ssl, (const char *) ciphers->data);
+}
+
+
+void
+ngx_ssl_sni_fn(ngx_ssl_t *ssl, int (*sni_fn)(void *, ssl_context *,
+  const unsigned char *, size_t))
+{
+    ssl->sni_fn = sni_fn;
 }
 
 
@@ -1149,6 +1159,10 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
         ssl_set_session_cache(ssl_ctx,
                 ngx_polarssl_get_cache, ssl->cache_shm_zone,
                 ngx_polarssl_set_cache, ssl->cache_shm_zone);
+    }
+
+    if (ssl->sni_fn) {
+        ssl_set_sni(ssl_ctx, ssl->sni_fn, c);
     }
 
     /* All done, the connection is good to go now */

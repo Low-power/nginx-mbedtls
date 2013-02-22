@@ -895,9 +895,65 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
     return SSL_TLSEXT_ERR_OK;
 }
 
-#endif
+#elif (NGX_POLARSSL)
 
-#endif
+int
+ngx_http_ssl_polarssl_sni(void *arg, ssl_context *ssl_conn,
+    const unsigned char *servername, size_t len)
+{
+    u_char                   *host;
+    ngx_connection_t         *c;
+    ngx_http_request_t       *r;
+    ngx_http_ssl_srv_conf_t  *sscf;
+
+    if (servername == NULL) {
+        return 0;
+    }
+
+    c = arg;
+
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+                   "SSL server name: \"%s\"", servername);
+
+    r = c->data;
+
+    host = (u_char *) servername;
+
+    len = ngx_http_validate_host(r, &host, len, 1);
+
+    if (len <= 0) {
+        return 0;
+    }
+
+    if (ngx_http_find_virtual_server(r, host, len) != NGX_OK) {
+        return 0;
+    }
+
+    sscf = ngx_http_get_module_srv_conf(r, ngx_http_ssl_module);
+
+    if (sscf->ssl.ctx) {
+        if (sscf->ssl.have_own_cert) {
+            ssl_set_own_cert(ssl_conn, &sscf->ssl.own_cert, &sscf->ssl.own_key);
+        }
+
+        if (sscf->ssl.have_ca_cert) {
+            if (sscf->ssl.have_ca_crl) {
+                ssl_set_ca_chain(ssl_conn, &sscf->ssl.ca_cert,
+                                 &sscf->ssl.ca_crl, NULL);
+            } else {
+                ssl_set_ca_chain(ssl_conn, &sscf->ssl.ca_cert, NULL, NULL);
+            }
+
+            ssl_set_authmode(ssl_conn, SSL_VERIFY_OPTIONAL);
+        }
+    }
+
+    return 0;
+}
+
+#endif /* NGX_POLARSSL */
+
+#endif /* NGX_HTTP_SSL */
 
 
 static void
