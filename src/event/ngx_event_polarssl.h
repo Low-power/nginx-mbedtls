@@ -8,6 +8,7 @@
 #ifndef _NGX_EVENT_POLARSSL_H_INCLUDED_
 #define _NGX_EVENT_POLARSSL_H_INCLUDED_
 
+
 #include <ngx_config.h>
 #include <ngx_core.h>
 
@@ -24,34 +25,36 @@
 
 #define NGX_SSL_NAME    "PolarSSL"
 
-#define ngx_ssl_session_t ssl_session
-#define ngx_ssl_conn_t ssl_context
+
+#define ngx_ssl_session_t       ssl_session
+#define ngx_ssl_conn_t          ssl_context
 
 
 typedef struct {
-    ngx_log_t       *log;
-    void            *data;
+    ngx_log_t                  *log;
+    void                       *data;
 
-    ssize_t         builtin_session_cache;
-    ngx_shm_zone_t  *cache_shm_zone;
-    time_t          cache_ttl;
+    ssize_t                     builtin_session_cache;
+    ngx_shm_zone_t             *cache_shm_zone;
+    time_t                      cache_ttl;
 
-    ngx_uint_t      minor_min;
-    ngx_uint_t      minor_max;
+    ngx_uint_t                  minor_min;
+    ngx_uint_t                  minor_max;
 
-    int             *ciphersuites;
-    dhm_context     dhm_ctx;
-    x509_cert       own_cert;
-    rsa_context     own_key;
-    x509_cert       ca_cert;
-    x509_crl        ca_crl;
+    int                        *ciphersuites;
+    dhm_context                 dhm_ctx;
+    x509_cert                   own_cert;
+    rsa_context                 own_key;
+    x509_cert                   ca_cert;
+    x509_crl                    ca_crl;
 
-    unsigned        have_own_cert:1;
-    unsigned        have_ca_cert:1;
-    unsigned        have_ca_crl:1;
+    unsigned                    have_own_cert:1;
+    unsigned                    have_ca_cert:1;
+    unsigned                    have_ca_crl:1;
 
-    void            *ctx;               /* Fake global state */
+    void                       *ctx;        /* Fake global state */
 } ngx_ssl_t;
+
 
 typedef struct {
     ngx_ssl_conn_t              *connection;
@@ -70,6 +73,13 @@ typedef struct {
     unsigned                    no_wait_shutdown:1;
 } ngx_ssl_connection_t;
 
+
+#define NGX_SSL_NO_SCACHE            -2
+#define NGX_SSL_NONE_SCACHE          -3
+#define NGX_SSL_NO_BUILTIN_SCACHE    -4
+#define NGX_SSL_DFLT_BUILTIN_SCACHE  -5
+
+
 typedef struct ngx_ssl_sess_id_s ngx_ssl_sess_id_t;
 
 struct ngx_ssl_sess_id_s {
@@ -77,6 +87,7 @@ struct ngx_ssl_sess_id_s {
     ngx_queue_t                 queue;
     ngx_ssl_session_t          *session;
 };
+
 
 typedef struct {
     ngx_rbtree_t                session_rbtree;
@@ -86,16 +97,12 @@ typedef struct {
 } ngx_ssl_session_cache_t;
 
 
-#define NGX_SSL_NO_SCACHE            -2
-#define NGX_SSL_NONE_SCACHE          -3
-#define NGX_SSL_NO_BUILTIN_SCACHE    -4
-#define NGX_SSL_DFLT_BUILTIN_SCACHE  -5
-
 #define NGX_SSL_SSLv2       0x0002
 #define NGX_SSL_SSLv3       0x0004
 #define NGX_SSL_TLSv1       0x0008
 #define NGX_SSL_TLSv1_1     0x0010
 #define NGX_SSL_TLSv1_2     0x0020
+
 
 #define NGX_SSL_BUFFER      1
 #define NGX_SSL_CLIENT      2
@@ -105,7 +112,6 @@ typedef struct {
 
 ngx_int_t ngx_ssl_init(ngx_log_t *log);
 ngx_int_t ngx_ssl_create(ngx_ssl_t *ssl, ngx_uint_t protocols, void *data);
-
 ngx_int_t ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl,
     ngx_str_t *cert, ngx_str_t *key);
 ngx_int_t ngx_ssl_client_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl,
@@ -123,8 +129,7 @@ ngx_int_t ngx_ssl_cipher_list(ngx_conf_t *cf, ngx_ssl_t *ssl,
     ngx_str_t *ciphers);
 
 ngx_int_t ngx_ssl_session_cache(ngx_ssl_t *ssl, ngx_str_t *sess_ctx,
-    ssize_t builtin_session_cache, ngx_shm_zone_t *shm_zone, time_t
-    timeout);
+    ssize_t builtin_session_cache, ngx_shm_zone_t *shm_zone, time_t timeout);
 ngx_int_t ngx_ssl_session_cache_init(ngx_shm_zone_t *shm_zone, void *data);
 void ngx_ssl_remove_cached_session(ngx_ssl_t *ssl, ngx_ssl_session_t *sess);
 ngx_int_t ngx_ssl_set_session(ngx_connection_t *c, ngx_ssl_session_t *session);
@@ -159,6 +164,7 @@ ngx_int_t ngx_ssl_get_serial_number(ngx_connection_t *c, ngx_pool_t *pool,
 ngx_int_t ngx_ssl_get_client_verify(ngx_connection_t *c, ngx_pool_t *pool,
     ngx_str_t *s);
 
+
 ngx_int_t ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
     ngx_uint_t flags);
 ngx_int_t ngx_ssl_handshake(ngx_connection_t *c);
@@ -172,5 +178,6 @@ ngx_int_t ngx_ssl_shutdown(ngx_connection_t *c);
 void ngx_cdecl ngx_ssl_error(ngx_uint_t level, ngx_log_t *log, ngx_err_t err,
     char *fmt, ...);
 void ngx_ssl_cleanup_ctx(void *data);
+
 
 #endif /* _NGX_EVENT_POLARSSL_H_INCLUDED_ */
