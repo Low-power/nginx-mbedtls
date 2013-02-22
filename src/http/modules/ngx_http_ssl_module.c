@@ -505,13 +505,8 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
-    if (SSL_CTX_set_cipher_list(conf->ssl.ctx,
-                                (const char *) conf->ciphers.data)
-        == 0)
-    {
-        ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0,
-                      "SSL_CTX_set_cipher_list(\"%V\") failed",
-                      &conf->ciphers);
+    if (ngx_ssl_cipher_list(cf, &conf->ssl, &conf->ciphers) != NGX_OK) {
+        return NGX_CONF_ERROR;
     }
 
     if (conf->verify) {
@@ -543,12 +538,16 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
+#ifdef NGX_OPENSSL
+
     if (conf->prefer_server_ciphers) {
         SSL_CTX_set_options(conf->ssl.ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
     }
 
     /* a temporary 512-bit RSA key is required for export versions of MSIE */
     SSL_CTX_set_tmp_rsa_callback(conf->ssl.ctx, ngx_ssl_rsa512_key_callback);
+
+#endif
 
     if (ngx_ssl_dhparam(cf, &conf->ssl, &conf->dhparam) != NGX_OK) {
         return NGX_CONF_ERROR;
