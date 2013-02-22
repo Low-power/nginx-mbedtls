@@ -48,6 +48,9 @@ typedef struct {
     x509_cert                   ca_cert;
     x509_crl                    ca_crl;
 
+    int                         (*sni_fn)(void *, ssl_context *,
+                                          const unsigned char *, size_t);
+
     unsigned                    have_own_cert:1;
     unsigned                    have_ca_cert:1;
     unsigned                    have_ca_crl:1;
@@ -127,6 +130,8 @@ ngx_int_t ngx_ssl_dhparam(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *file);
 ngx_int_t ngx_ssl_ecdh_curve(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *name);
 ngx_int_t ngx_ssl_cipher_list(ngx_conf_t *cf, ngx_ssl_t *ssl,
     ngx_str_t *ciphers);
+void ngx_ssl_sni_fn(ngx_ssl_t *ssl, int (*sni_fn)(void *, ssl_context *,
+    const unsigned char *, size_t));
 
 ngx_int_t ngx_ssl_session_cache(ngx_ssl_t *ssl, ngx_str_t *sess_ctx,
     ssize_t builtin_session_cache, ngx_shm_zone_t *shm_zone, time_t timeout);
@@ -136,7 +141,6 @@ ngx_int_t ngx_ssl_set_session(ngx_connection_t *c, ngx_ssl_session_t *session);
 ngx_ssl_session_t *ngx_ssl_get_session(ngx_connection_t *c);
 ngx_ssl_session_t *ngx_ssl_peek_session(ngx_connection_t *c);
 void ngx_ssl_free_session(ngx_ssl_session_t *session);
-/* ngx_connection_t *ngx_ssl_get_connection(ngx_ssl_conn_t *ssl_conn); */
 
 ngx_int_t ngx_ssl_have_peer_cert(ngx_connection_t *c);
 ngx_int_t ngx_ssl_verify_result(ngx_connection_t *c, long *rc,

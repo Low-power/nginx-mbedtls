@@ -488,6 +488,10 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
             "therefore SNI is not available");
     }
 
+#elif (NGX_POLARSSL)
+
+    ngx_ssl_sni_fn(conf->ssl.ctx, ngx_http_ssl_polarssl_sni);
+
 #endif
 
     cln = ngx_pool_cleanup_add(cf->pool, 0);
