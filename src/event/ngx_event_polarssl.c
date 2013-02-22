@@ -41,6 +41,9 @@ static int ngx_polarssl_set_cache(void *ctx, const ssl_session *session);
 static void ngx_cdecl ngx_polarssl_error(ngx_uint_t level, ngx_log_t *log,
     ngx_err_t err, int sslerr, char *fmt, ...);
 static int ngx_polarssl_cipher_in_list(const int id, const int *ciphersuites);
+static ngx_int_t ngx_polarssl_set_cipher_list(ngx_ssl_t *ssl,
+    const char *ciphers);
+static const char *ngx_polarssl_verify_error_str(int n);
 static int ngx_polarssl_rng(void *data, unsigned char *output, size_t output_len);
 static void ngx_polarssl_exit(ngx_cycle_t *cycle);
 
@@ -294,18 +297,6 @@ ngx_ssl_stapling_resolver(ngx_conf_t *cf, ngx_ssl_t *ssl,
     return NGX_ERROR;
 }
 
-RSA *
-ngx_ssl_rsa512_key_callback(SSL *ssl, int is_export, int key_length)
-{
-
-    /*
-     * Not supported by PolarSSL, but clients that are too old more than likely
-     * will not support SSL 3.0 (or higher) anyway.
-     */
-
-    return NULL;
-}
-
 ngx_int_t
 ngx_ssl_dhparam(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *file)
 {
@@ -354,6 +345,12 @@ ngx_ssl_ecdh_curve(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *name)
     /* ECDH is not supported by PolarSSL */
     
     return NGX_OK;
+}
+
+ngx_int_t
+ngx_ssl_cipher_list(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *ciphers)
+{
+    return ngx_polarssl_set_cipher_list(ssl, (const char *) ciphers->data);
 }
 
 ngx_int_t
@@ -776,6 +773,12 @@ ngx_ssl_get_session(ngx_connection_t *c)
     return NULL;
 }
 
+ngx_ssl_session_t *
+ngx_ssl_peek_session(ngx_connection_t *c)
+{
+    return c->ssl->connection->session;
+}
+
 void
 ngx_ssl_free_session(ngx_ssl_session_t *session)
 {
@@ -784,15 +787,30 @@ ngx_ssl_free_session(ngx_ssl_session_t *session)
 }
 
 ngx_int_t
-ngx_ssl_verify_error_optional(int n)
+ngx_ssl_have_peer_cert(ngx_connection_t *c)
 {
-    
-    /*
-     * As far as I can tell, PolarSSL doesn't return ignorable values on
-     * verification failure.
-     */
+    if (ssl_get_peer_cert(c->ssl->connection) != NULL) {
+        return NGX_OK;
+    }
 
-    return 0;
+    return NGX_ERROR;
+}
+
+ngx_int_t
+ngx_ssl_verify_result(ngx_connection_t *c, long *rc, const char **errstr)
+{
+    int  sslerr;
+
+    sslerr = ssl_get_verify_result(c->ssl->connection);
+
+    if (sslerr != 0) {
+        *rc = sslerr;
+        *errstr = ngx_polarssl_verify_error_str(sslerr);
+
+        return NGX_ERROR;
+    }
+
+    return NGX_OK;
 }
 
 ngx_int_t
@@ -1805,13 +1823,12 @@ ngx_polarssl_cipher_in_list(const int id, const int *ciphersuites)
     return 0;
 }
 
-int
-SSL_CTX_set_cipher_list(void *ctx, const char *ciphers)
+static ngx_int_t
+ngx_polarssl_set_cipher_list(ngx_ssl_t *ssl, const char *ciphers)
 {
     static const char   ngx_default_ciphers[] = "HIGH:!aNULL:!MD5";
     const int          *supported_ciphersuites;
     char                cipher_name[POLARSSL_SSL_CIPHER_MAX_LENGTH];
-    ngx_ssl_t          *ssl = ctx;
     const char         *c, *end, *sep;
     int                 i, idx, cipher_id;
 
@@ -1835,7 +1852,7 @@ SSL_CTX_set_cipher_list(void *ctx, const char *ciphers)
 
     ssl->ciphersuites = ngx_alloc((i + 1) * sizeof(int), ssl->log);
     if (ssl->ciphersuites == NULL) {
-        return 0;
+        return NGX_ERROR;
     }
 
     if (ngx_strcmp(ciphers, ngx_default_ciphers) == 0) {
@@ -1874,7 +1891,7 @@ SSL_CTX_set_cipher_list(void *ctx, const char *ciphers)
 
         ssl->ciphersuites[i] = 0;
 
-        return (i != 0);
+        return (i != 0) ? NGX_OK : NGX_ERROR;
     }
 
     /* Tokenize the list of ciphers */
@@ -1936,56 +1953,11 @@ skip:
         }
     }
 
-    return (i != 0);
+    return (i != 0) ? NGX_OK : NGX_ERROR;
 }
 
-long
-SSL_CTX_set_options(void *ctx, long options)
-{
-
-    /*
-     * The only thing that this is used for as far as I can tell is
-     * SSL_OP_CIPHER_SERVER_PREFERENCE which has no PolarSSL equivalent.
-     */
-
-    return 0;
-}
-
-void
-SSL_CTX_set_tmp_rsa_callback(void *ctx,
-    RSA *(*tmp_rsa_callback)(SSL *ssl, int is_export, int keylength))
-{
-
-    /* Not supported by PolarSSL, see ngx_ssl_rsa512_key_callback */
-}
-
-void *
-SSL_get0_session(const SSL *ssl)
-{
-    return ssl->session;
-}
-
-long
-SSL_get_verify_result(const SSL *ssl)
-{
-    int rval = ssl_get_verify_result(ssl);
-
-    return (rval == 0) ? X509_V_OK : rval;
-}
-
-X509 *
-SSL_get_peer_certificate(SSL *ssl)
-{
-    /*
-     * Cast off the const, this is only used by ngx_http_request and the
-     * it's use case is harmless.
-     */
-
-    return (X509 *) ssl_get_peer_cert(ssl);
-}
-
-const char *
-X509_verify_cert_error_string(long n)
+static const char *
+ngx_polarssl_verify_error_str(int n)
 {
     /*
      * n is a bit vector consisting of BADCERT_EXPIRED, BADCERT_REVOKED,
@@ -2030,15 +2002,5 @@ X509_verify_cert_error_string(long n)
     }
 
     return NULL;
-}
-
-void
-X509_free(X509 *cert)
-{
-    /*
-     * Don't need to free anything, we aren't OpenSSL, and the only way a
-     * consumer can get a x509_cert is via the SSL_get_peer_certificate
-     * compatibility wrapper which returns a reference.
-     */
 }
 

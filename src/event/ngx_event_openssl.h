@@ -126,6 +126,8 @@ RSA *ngx_ssl_rsa512_key_callback(ngx_ssl_conn_t *ssl_conn, int is_export,
     int key_length);
 ngx_int_t ngx_ssl_dhparam(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *file);
 ngx_int_t ngx_ssl_ecdh_curve(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *name);
+ngx_int_t ngx_ssl_cipher_list(ngx_conf_t *cf, ngx_ssl_t *ssl,
+    ngx_str_t *ciphers);
 ngx_int_t ngx_ssl_session_cache(ngx_ssl_t *ssl, ngx_str_t *sess_ctx,
     ssize_t builtin_session_cache, ngx_shm_zone_t *shm_zone, time_t timeout);
 ngx_int_t ngx_ssl_session_ticket_keys(ngx_conf_t *cf, ngx_ssl_t *ssl,
@@ -137,12 +139,16 @@ ngx_int_t ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
 void ngx_ssl_remove_cached_session(SSL_CTX *ssl, ngx_ssl_session_t *sess);
 ngx_int_t ngx_ssl_set_session(ngx_connection_t *c, ngx_ssl_session_t *session);
 #define ngx_ssl_get_session(c)      SSL_get1_session(c->ssl->connection)
+#define ngx_ssl_peek_session(c)     SSL_get0_session(c->ssl->connection)
 #define ngx_ssl_free_session        SSL_SESSION_free
 #define ngx_ssl_get_connection(ssl_conn)                                      \
     SSL_get_ex_data(ssl_conn, ngx_ssl_connection_index)
 #define ngx_ssl_get_server_conf(ssl_ctx)                                      \
     SSL_CTX_get_ex_data(ssl_ctx, ngx_ssl_server_conf_index)
 
+ngx_int_t ngx_ssl_have_peer_cert(ngx_connection_t *c);
+ngx_int_t ngx_ssl_verify_result(ngx_connection_t *c, long *rc,
+    const char **errstr);
 #define ngx_ssl_verify_error_optional(n)                                      \
     (n == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT                              \
      || n == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN                             \

@@ -718,6 +718,21 @@ ngx_ssl_ecdh_curve(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *name)
 
 
 ngx_int_t
+ngx_ssl_cipher_list(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *ciphers)
+{
+    if (SSL_CTX_set_cipher_list(ssl->ctx, (const char *) ciphers->data) == 0) {
+        ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0,
+                      "SSL_CTX_set_cipher_list(\"%V\") failed",
+                      ciphers);
+
+        return NGX_ERROR;
+    }
+
+    return NGX_OK;
+}
+
+
+ngx_int_t
 ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c, ngx_uint_t flags)
 {
     ngx_ssl_connection_t  *sc;
@@ -768,6 +783,40 @@ ngx_ssl_set_session(ngx_connection_t *c, ngx_ssl_session_t *session)
             ngx_ssl_error(NGX_LOG_ALERT, c->log, 0, "SSL_set_session() failed");
             return NGX_ERROR;
         }
+    }
+
+    return NGX_OK;
+}
+
+
+ngx_int_t
+ngx_ssl_have_peer_cert(ngx_connection_t *c)
+{
+    X509      *cert;
+    ngx_err_t  err;
+
+    cert = SSL_get_peer_certificate(c->ssl->connection);
+
+    err = (cert == NULL) ? NGX_ERROR : NGX_OK;
+
+    X509_free(cert);
+
+    return err;
+}
+
+
+ngx_int_t
+ngx_ssl_verify_result(ngx_connection_t *c, long *rc, const char **errstr)
+{
+    long  l;
+
+    l = SSL_get_verify_result(c->ssl->connection);
+
+    if (l != X509_V_OK) {
+        *rc = l;
+        *errstr = X509_verify_cert_error_string(l);
+
+        return NGX_ERROR;
     }
 
     return NGX_OK;
