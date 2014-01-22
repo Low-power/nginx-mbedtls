@@ -150,13 +150,17 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
                 goto done;
             }
 
-            cl = ngx_chain_get_free_buf(r->pool, &rb->free);
-            if (cl == NULL) {
-                rc = NGX_HTTP_INTERNAL_SERVER_ERROR;
-                goto done;
-            }
+            if (rb->temp_file->file.offset != 0) {
 
-            b = cl->buf;
+                cl = ngx_chain_get_free_buf(r->pool, &rb->free);
+                if (cl == NULL) {
+                    rc = NGX_HTTP_INTERNAL_SERVER_ERROR;
+                    goto done;
+                }
+
+                b = cl->buf;
+
+                ngx_memzero(b, sizeof(ngx_buf_t));
 
                 b->in_file = 1;
                 b->file_last = rb->temp_file->file.offset;
