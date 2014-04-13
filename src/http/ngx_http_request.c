@@ -933,7 +933,7 @@ ngx_http_ssl_polarssl_sni(void *arg, ssl_context *ssl_conn,
 
     if (sscf->ssl.ctx) {
         if (sscf->ssl.have_own_cert) {
-            ssl_set_own_cert(ssl_conn, &sscf->ssl.own_cert, &sscf->ssl.own_key);
+            ssl_set_own_cert_rsa(ssl_conn, &sscf->ssl.own_cert, &sscf->ssl.own_key);
         }
 
         if (sscf->ssl.have_ca_cert) {

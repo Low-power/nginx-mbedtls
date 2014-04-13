@@ -313,11 +313,11 @@ ngx_ssl_dhparam(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *file)
 
 
     if (file->len == 0) {
-        sslerr = x509parse_dhm(&ssl->dhm_ctx, dh1024_pem,
+        sslerr = dhm_parse_dhm(&ssl->dhm_ctx, dh1024_pem,
                                ngx_strlen(dh1024_pem));
         if (sslerr != 0) {
             ngx_polarssl_error(NGX_LOG_EMERG, ssl->log, 0, sslerr,
-                               "x509parse_dhm() failed");
+                               "dhm_parse_dhm() failed");
 
             return NGX_ERROR;
         }
@@ -329,10 +329,10 @@ ngx_ssl_dhparam(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *file)
         return NGX_ERROR;
     }
 
-    sslerr = x509parse_dhmfile(&ssl->dhm_ctx, (char *) file->data);
+    sslerr = dhm_parse_dhmfile(&ssl->dhm_ctx, (char *) file->data);
     if (sslerr != 0) {
         ngx_polarssl_error(NGX_LOG_EMERG, ssl->log, 0, sslerr,
-                           "x509parse_dhmfile(%p, \"%s\") failed",
+                           "dhm_parse_dhmfile(%p, \"%s\") failed",
                            &ssl->dhm_ctx, file->data);
 
         return NGX_ERROR;
@@ -1110,11 +1110,11 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
         ssl_set_endpoint(ssl_ctx, SSL_IS_CLIENT);
 
         if (ssl->have_own_cert) {
-            ssl_set_own_cert(ssl_ctx, &ssl->own_cert, &ssl->own_key);
+            ssl_set_own_cert_rsa(ssl_ctx, &ssl->own_cert, &ssl->own_key);
         }
     } else {
         ssl_set_endpoint(ssl_ctx, SSL_IS_SERVER);
-        ssl_set_own_cert(ssl_ctx, &ssl->own_cert, &ssl->own_key);
+        ssl_set_own_cert_rsa(ssl_ctx, &ssl->own_cert, &ssl->own_key);
     }
 
     if (ssl->have_ca_cert) {
@@ -1728,7 +1728,7 @@ ngx_ssl_error(ngx_uint_t level, ngx_log_t *log, ngx_err_t err, char *fmt, ...)
     last = errstr + NGX_MAX_CONF_ERRSTR;
 
     va_start(args, fmt);
-    p = ngx_vslprintf(errstr, last - 1, fmt, args);
+    *p = ngx_vslprintf(errstr, last - 1, fmt, args);
     va_end(args);
 
     /*

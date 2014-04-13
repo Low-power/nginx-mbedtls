@@ -23,6 +23,8 @@
 #include "polarssl/x509.h"
 #include "polarssl/error.h"
 
+#include "polarssl/compat-1.2.h"
+
 #define NGX_SSL_NAME    "PolarSSL"
 
 
