@@ -1722,13 +1722,13 @@ void ngx_cdecl
 ngx_ssl_error(ngx_uint_t level, ngx_log_t *log, ngx_err_t err, char *fmt, ...)
 {
     va_list  args;
-    u_char  *p, *last;
+    // u_char  *p, *last;
     u_char   errstr[NGX_MAX_CONF_ERRSTR];
 
-    last = errstr + NGX_MAX_CONF_ERRSTR;
+    // last = errstr + NGX_MAX_CONF_ERRSTR;
 
     va_start(args, fmt);
-    *p = ngx_vslprintf(errstr, last - 1, fmt, args);
+    // *p = ngx_vslprintf(errstr, last - 1, fmt, args);
     va_end(args);
 
     /*
