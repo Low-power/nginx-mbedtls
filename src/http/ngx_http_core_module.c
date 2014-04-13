@@ -76,6 +76,9 @@ static ngx_uint_t ngx_http_gzip_quantity(u_char *p, u_char *last);
 static char *ngx_http_gzip_disable(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 #endif
+static ngx_int_t ngx_http_get_forwarded_addr_internal(ngx_http_request_t *r,
+    ngx_addr_t *addr, u_char *xff, size_t xfflen, ngx_array_t *proxies,
+    int recursive);
 #if (NGX_HAVE_OPENAT)
 static char *ngx_http_disable_symlinks(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
@@ -1458,11 +1461,7 @@ ngx_http_update_location_config(ngx_http_request_t *r)
     }
 
     if (r == r->main) {
-        r->connection->log->file = clcf->error_log->file;
-
-        if (!(r->connection->log->log_level & NGX_LOG_DEBUG_CONNECTION)) {
-            r->connection->log->log_level = clcf->error_log->log_level;
-        }
+        ngx_http_set_connection_log(r->connection, clcf->error_log);
     }
 
     if ((ngx_io.flags & NGX_IO_SENDFILE) && clcf->sendfile) {
@@ -2131,6 +2130,13 @@ ngx_http_gzip_ok(ngx_http_request_t *r)
         return NGX_DECLINED;
     }
 
+#if (NGX_HTTP_SPDY)
+    if (r->spdy_stream) {
+        r->gzip_ok = 1;
+        return NGX_OK;
+    }
+#endif
+
     ae = r->headers_in.accept_encoding;
     if (ae == NULL) {
         return NGX_DECLINED;
@@ -2465,6 +2471,10 @@ ngx_http_subrequest(ngx_http_request_t *r,
 
     sr->request_body = r->request_body;
 
+#if (NGX_HTTP_SPDY)
+    sr->spdy_stream = r->spdy_stream;
+#endif
+
     sr->method = NGX_HTTP_GET;
     sr->http_version = r->http_version;
 
@@ -2747,10 +2757,58 @@ ngx_http_set_disable_symlinks(ngx_http_request_t *r,
 
 ngx_int_t
 ngx_http_get_forwarded_addr(ngx_http_request_t *r, ngx_addr_t *addr,
+    ngx_array_t *headers, ngx_str_t *value, ngx_array_t *proxies,
+    int recursive)
+{
+    ngx_int_t          rc;
+    ngx_uint_t         i, found;
+    ngx_table_elt_t  **h;
+
+    if (headers == NULL) {
+        return ngx_http_get_forwarded_addr_internal(r, addr, value->data,
+                                                    value->len, proxies,
+                                                    recursive);
+    }
+
+    i = headers->nelts;
+    h = headers->elts;
+
+    rc = NGX_DECLINED;
+
+    found = 0;
+
+    while (i-- > 0) {
+        rc = ngx_http_get_forwarded_addr_internal(r, addr, h[i]->value.data,
+                                                  h[i]->value.len, proxies,
+                                                  recursive);
+
+        if (!recursive) {
+            break;
+        }
+
+        if (rc == NGX_DECLINED && found) {
+            rc = NGX_DONE;
+            break;
+        }
+
+        if (rc != NGX_OK) {
+            break;
+        }
+
+        found = 1;
+    }
+
+    return rc;
+}
+
+
+static ngx_int_t
+ngx_http_get_forwarded_addr_internal(ngx_http_request_t *r, ngx_addr_t *addr,
     u_char *xff, size_t xfflen, ngx_array_t *proxies, int recursive)
 {
     u_char           *p;
     in_addr_t         inaddr;
+    ngx_int_t         rc;
     ngx_addr_t        paddr;
     ngx_cidr_t       *cidr;
     ngx_uint_t        family, i;
@@ -2842,8 +2900,15 @@ ngx_http_get_forwarded_addr(ngx_http_request_t *r, ngx_addr_t *addr,
         *addr = paddr;
 
         if (recursive && p > xff) {
-            (void) ngx_http_get_forwarded_addr(r, addr, xff, p - 1 - xff,
-                                               proxies, 1);
+            rc = ngx_http_get_forwarded_addr_internal(r, addr, xff, p - 1 - xff,
+                                                      proxies, 1);
+
+            if (rc == NGX_DECLINED) {
+                return NGX_DONE;
+            }
+
+            /* rc == NGX_OK || rc == NGX_DONE  */
+            return rc;
         }
 
         return NGX_OK;
@@ -3191,7 +3256,7 @@ ngx_http_core_regex_location(ngx_conf_t *cf, ngx_http_core_loc_conf_t *clcf,
 #if (NGX_HAVE_CASELESS_FILESYSTEM)
     rc.options = NGX_REGEX_CASELESS;
 #else
-    rc.options = caseless;
+    rc.options = caseless ? NGX_REGEX_CASELESS : 0;
 #endif
 
     clcf->regex = ngx_http_regex_compile(cf, &rc);
@@ -4072,6 +4137,18 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                                "the \"ssl\" parameter requires "
                                "ngx_http_ssl_module");
+            return NGX_CONF_ERROR;
+#endif
+        }
+
+        if (ngx_strcmp(value[n].data, "spdy") == 0) {
+#if (NGX_HTTP_SPDY)
+            lsopt.spdy = 1;
+            continue;
+#else
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+                               "the \"spdy\" parameter requires "
+                               "ngx_http_spdy_module");
             return NGX_CONF_ERROR;
 #endif
         }
