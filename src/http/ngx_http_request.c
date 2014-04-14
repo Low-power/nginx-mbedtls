@@ -869,6 +869,7 @@ ngx_http_ssl_polarssl_sni(void *arg, ssl_context *ssl_conn,
                    "SSL server name: \"%s\"", servername);
 
     r = c->data;
+    hc = r->http_connection;
 
     host.len = ngx_strlen(servername);
 
@@ -1846,6 +1847,7 @@ ngx_http_process_request(ngx_http_request_t *r)
         long                      rc;
         const char               *errstr;
         ngx_http_ssl_srv_conf_t  *sscf;
+        ngx_err_t                err;
 
         if (c->ssl == NULL) {
             ngx_log_error(NGX_LOG_INFO, c->log, 0,

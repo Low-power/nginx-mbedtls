@@ -14,6 +14,8 @@
 
 #include "polarssl/config.h"
 
+
+#include "polarssl/compat-1.2.h"
 #include "polarssl/base64.h"
 #include "polarssl/entropy.h"
 #include "polarssl/ctr_drbg.h"
@@ -22,8 +24,6 @@
 #include "polarssl/certs.h"
 #include "polarssl/x509.h"
 #include "polarssl/error.h"
-
-#include "polarssl/compat-1.2.h"
 
 #define NGX_SSL_NAME    "PolarSSL"
 
