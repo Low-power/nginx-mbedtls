@@ -853,10 +853,11 @@ ngx_http_ssl_polarssl_sni(void *arg, ssl_context *ssl_conn,
     const unsigned char *servername, size_t len)
 {
     ngx_connection_t         *c;
-    ngx_str_t                host, *r;
+    ngx_str_t                host;
+    ngx_http_request_t       *r;
     ngx_http_connection_t    *hc;
-    ngx_http_ssl_srv_conf_t  *sscf;
     ngx_http_core_srv_conf_t *cscf;
+    ngx_http_ssl_srv_conf_t  *sscf;
 
     if (servername == NULL) {
         return 0;
@@ -881,7 +882,7 @@ ngx_http_ssl_polarssl_sni(void *arg, ssl_context *ssl_conn,
                                      NULL, &cscf) 
             != NGX_OK)
     {
-        return SSL_TLSEXT_ERR_NOACK;
+        return 0;
     }
 
     sscf = ngx_http_get_module_srv_conf(r, ngx_http_ssl_module);
