@@ -141,9 +141,9 @@ ngx_ssl_create(ngx_ssl_t *ssl, ngx_uint_t protocols, void *data)
 
     ssl->ciphersuites = NULL;
     ngx_memset(&ssl->dhm_ctx, 0, sizeof(dhm_context));
-    ngx_memset(&ssl->own_cert, 0, sizeof(x509_cert));
+    ngx_memset(&ssl->own_cert, 0, sizeof(x509_crt));
     ngx_memset(&ssl->own_key, 0, sizeof(rsa_context));
-    ngx_memset(&ssl->ca_cert, 0, sizeof(x509_cert));
+    ngx_memset(&ssl->ca_cert, 0, sizeof(x509_crt));
     ngx_memset(&ssl->ca_crl, 0, sizeof(x509_crl));
     ssl->have_own_cert = 0;
     ssl->have_ca_cert = 0;
@@ -666,7 +666,7 @@ ngx_polarssl_set_cache(void *ctx, const ssl_session *session)
     }
 
     memcpy(cached_sess, session, sizeof(ngx_ssl_session_t));
-    cached_sess->peer_cert = (x509_cert *) (ngx_time() + cache->ttl);
+    cached_sess->peer_cert = (x509_crt *) (ngx_time() + cache->ttl);
 
     hash = ngx_crc32_short(cached_sess->id, cached_sess->length);
 
@@ -887,7 +887,7 @@ ngx_ssl_get_raw_certificate(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
     static const unsigned char  pem_header[] = { "-----BEGIN CERTIFICATE-----\r\n" };
     static const unsigned char  pem_footer[] = { "-----END CERTIFICATE-----" };
     size_t                      len = 0, i;
-    const x509_cert            *cert;
+    const x509_crt            *cert;
     unsigned char              *p = NULL;
 
     /*
@@ -966,7 +966,7 @@ ngx_ssl_get_certificate(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
 ngx_int_t
 ngx_ssl_get_subject_dn(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
 {
-    const x509_cert  *cert;
+    const x509_crt  *cert;
     int               len;
 
     cert = ssl_get_peer_cert(c->ssl->connection);
@@ -994,7 +994,7 @@ ngx_ssl_get_subject_dn(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
 ngx_int_t
 ngx_ssl_get_issuer_dn(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
 {
-    const x509_cert  *cert;
+    const x509_crt  *cert;
     int               len;
 
     cert = ssl_get_peer_cert(c->ssl->connection);
@@ -1022,7 +1022,7 @@ ngx_ssl_get_issuer_dn(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
 ngx_int_t
 ngx_ssl_get_serial_number(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
 {
-    const x509_cert  *cert;
+    const x509_crt  *cert;
     int               len;
 
     cert = ssl_get_peer_cert(c->ssl->connection);
@@ -1050,7 +1050,7 @@ ngx_ssl_get_serial_number(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
 ngx_int_t
 ngx_ssl_get_client_verify(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
 {
-    const x509_cert  *cert;
+    const x509_crt  *cert;
 
     if (ssl_get_verify_result(c->ssl->connection) != 0) {
         ngx_str_set(s, "FAILED");

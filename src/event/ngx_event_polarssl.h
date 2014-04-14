@@ -14,8 +14,6 @@
 
 #include "polarssl/config.h"
 
-
-#include "polarssl/compat-1.2.h"
 #include "polarssl/base64.h"
 #include "polarssl/entropy.h"
 #include "polarssl/ctr_drbg.h"
@@ -24,6 +22,7 @@
 #include "polarssl/certs.h"
 #include "polarssl/x509.h"
 #include "polarssl/error.h"
+
 
 #define NGX_SSL_NAME    "PolarSSL"
 
@@ -45,9 +44,9 @@ typedef struct {
 
     int                        *ciphersuites;
     dhm_context                 dhm_ctx;
-    x509_cert                   own_cert;
+    x509_crt                   own_cert;
     rsa_context                 own_key;
-    x509_cert                   ca_cert;
+    x509_crt                    ca_cert;
     x509_crl                    ca_crl;
 
     int                         (*sni_fn)(void *, ssl_context *,
