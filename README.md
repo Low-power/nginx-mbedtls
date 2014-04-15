@@ -78,7 +78,7 @@ Know Issues/Implementation Differences
 
 nginx-polarssl Issues:
 
- - See the [github issue tracker](https://github.com/Yawning/nginx-polarssl/issues?sort=created&state=open)
+ - See the [github issue tracker](https://github.com/alinefr/nginx-polarssl/issues?sort=created&state=open)
 
 PolarSSL Issues:
 
