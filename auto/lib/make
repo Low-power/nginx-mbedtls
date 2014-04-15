@@ -19,6 +19,10 @@ if [ $OPENSSL != NONE -a $OPENSSL != NO -a $OPENSSL != YES ]; then
     . auto/lib/openssl/make
 fi
 
+if [ $POLARSSL != NONE -a $POLARSSL != NO -a $POLARSSL != YES ]; then
+    . auto/lib/polarssl/make
+fi
+
 if [ $ZLIB != NONE -a $ZLIB != NO -a $ZLIB != YES ]; then
     . auto/lib/zlib/make
 fi

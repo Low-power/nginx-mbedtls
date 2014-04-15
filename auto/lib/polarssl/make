@@ -1,0 +1,31 @@
+
+# Copyright (C) Igor Sysoev
+# Copyright (C) Nginx, Inc.
+
+
+case "$CC" in
+
+    # TODO: Someone that cares should write this for cl/BCC.
+
+    cl)
+        exit 1
+    ;;
+
+    bcc32)
+        exit 1
+    ;;
+
+    *)
+        cat << END                                            >> $NGX_MAKEFILE
+
+$POLARSSL/.polarssl/include/polarssl/config.h:	$NGX_MAKEFILE
+	cd $POLARSSL \\
+	&& \$(MAKE) clean \\
+	&& \$(MAKE) no_test \\
+	&& \$(MAKE) install DESTDIR=.polarssl
+
+END
+
+    ;;
+
+esac

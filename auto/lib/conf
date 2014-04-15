@@ -20,9 +20,21 @@ END
     fi
 fi
 
+if [ $USE_SSL = YES ]; then
+    if [ $USE_OPENSSL = YES -o $OPENSSL != NONE ]; then
+        . auto/lib/openssl/conf
+    elif [ $USE_POLARSSL = YES -o $POLARSSL != NONE ]; then
+        . auto/lib/polarssl/conf
+    else
+        cat << END
 
-if [ $USE_OPENSSL = YES ]; then
-    . auto/lib/openssl/conf
+$0: error: Some modules requires a SSL library.
+You can either disable the modules or you have to enable a SSL
+implementation.
+
+END
+        exit 1
+    fi
 fi
 
 if [ $USE_MD5 = YES ]; then
@@ -33,6 +45,13 @@ if [ $USE_MD5 = YES ]; then
         have=NGX_HAVE_MD5 . auto/have
         MD5=YES
         MD5_LIB=OpenSSL
+
+    elif [ $USE_POLARSSL = YES -o $POLARSSL != NONE ]; then
+        have=NGX_HAVE_POLARSSL_MD5_H . auto/have
+        have=NGX_POLARSSL_MD5 . auto/have
+        have=NGX_HAVE_MD5 . auto/have
+        MD5=YES
+        MD5_LIB=PolarSSL
 
     else
         . auto/lib/md5/conf
@@ -47,6 +66,13 @@ if [ $USE_SHA1 = YES ]; then
         have=NGX_HAVE_SHA1 . auto/have
         SHA1=YES
         SHA1_LIB=OpenSSL
+
+    elif [ $USE_POLARSSL = YES -o $POLARSSL != NONE ]; then
+        have=NGX_HAVE_POLARSSL_SHA1_H . auto/have
+        have=NGX_POLARSSL_SHA1 . auto/have
+        have=NGX_HAVE_SHA1 . auto/have
+        SHA1=YES
+        SHA1_LIB=PolarSSL
 
     else
         . auto/lib/sha1/conf

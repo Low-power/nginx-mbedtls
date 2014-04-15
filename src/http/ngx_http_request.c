@@ -823,9 +823,71 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
     return SSL_TLSEXT_ERR_OK;
 }
 
-#endif
+#elif (NGX_POLARSSL)
 
-#endif
+int
+ngx_http_ssl_polarssl_sni(void *arg, ssl_context *ssl_conn,
+    const unsigned char *servername, size_t len)
+{
+    ngx_connection_t         *c;
+    ngx_str_t                host;
+    ngx_http_request_t       *r;
+    ngx_http_connection_t    *hc;
+    ngx_http_core_srv_conf_t *cscf;
+    ngx_http_ssl_srv_conf_t  *sscf;
+
+    if (servername == NULL) {
+        return 0;
+    }
+
+    c = arg;
+
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+                   "SSL server name: \"%s\"", servername);
+
+    r = c->data;
+    hc = r->http_connection;
+
+    host.len = ngx_strlen(servername);
+
+    len = ngx_http_validate_host(&host, c->pool, 1);
+
+    if (len <= 0) {
+        return 0;
+    }
+
+    if (ngx_http_find_virtual_server(c, hc->addr_conf->virtual_names, &host,
+                                     NULL, &cscf) 
+            != NGX_OK)
+    {
+        return 0;
+    }
+
+    sscf = ngx_http_get_module_srv_conf(r, ngx_http_ssl_module);
+
+    if (sscf->ssl.ctx) {
+        if (sscf->ssl.have_own_cert) {
+            ssl_set_own_cert_rsa(ssl_conn, &sscf->ssl.own_cert, &sscf->ssl.own_key);
+        }
+
+        if (sscf->ssl.have_ca_cert) {
+            if (sscf->ssl.have_ca_crl) {
+                ssl_set_ca_chain(ssl_conn, &sscf->ssl.ca_cert,
+                                 &sscf->ssl.ca_crl, NULL);
+            } else {
+                ssl_set_ca_chain(ssl_conn, &sscf->ssl.ca_cert, NULL, NULL);
+            }
+
+            ssl_set_authmode(ssl_conn, SSL_VERIFY_OPTIONAL);
+        }
+    }
+
+    return 0;
+}
+
+#endif /* NGX_POLARSSL */
+
+#endif /* NGX_HTTP_SSL */
 
 
 static void
@@ -1760,8 +1822,9 @@ ngx_http_process_request(ngx_http_request_t *r)
 
     if (r->http_connection->ssl) {
         long                      rc;
-        X509                     *cert;
+        const char               *errstr;
         ngx_http_ssl_srv_conf_t  *sscf;
+        ngx_err_t                err;
 
         if (c->ssl == NULL) {
             ngx_log_error(NGX_LOG_INFO, c->log, 0,
@@ -1773,37 +1836,33 @@ ngx_http_process_request(ngx_http_request_t *r)
         sscf = ngx_http_get_module_srv_conf(r, ngx_http_ssl_module);
 
         if (sscf->verify) {
-            rc = SSL_get_verify_result(c->ssl->connection);
+            err = ngx_ssl_verify_result(c, &rc, &errstr);
 
-            if (rc != X509_V_OK
+            if (err != NGX_OK
                 && (sscf->verify != 3 || !ngx_ssl_verify_error_optional(rc)))
             {
                 ngx_log_error(NGX_LOG_INFO, c->log, 0,
                               "client SSL certificate verify error: (%l:%s)",
-                              rc, X509_verify_cert_error_string(rc));
+                              rc, errstr);
 
                 ngx_ssl_remove_cached_session(sscf->ssl.ctx,
-                                       (SSL_get0_session(c->ssl->connection)));
+                                              (ngx_ssl_peek_session(c)));
 
                 ngx_http_finalize_request(r, NGX_HTTPS_CERT_ERROR);
                 return;
             }
 
             if (sscf->verify == 1) {
-                cert = SSL_get_peer_certificate(c->ssl->connection);
-
-                if (cert == NULL) {
+                if (ngx_ssl_have_peer_cert(c) != NGX_OK) {
                     ngx_log_error(NGX_LOG_INFO, c->log, 0,
                                   "client sent no required SSL certificate");
 
                     ngx_ssl_remove_cached_session(sscf->ssl.ctx,
-                                       (SSL_get0_session(c->ssl->connection)));
+                                                  (ngx_ssl_peek_session(c)));
 
                     ngx_http_finalize_request(r, NGX_HTTPS_NO_CERT);
                     return;
                 }
-
-                X509_free(cert);
             }
         }
     }
