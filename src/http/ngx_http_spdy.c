@@ -1465,7 +1465,7 @@ static u_char *
 ngx_http_spdy_state_save(ngx_http_spdy_connection_t *sc,
     u_char *pos, u_char *end, ngx_http_spdy_handler_pt handler)
 {
-#if (NGX_DEBUG)
+#if 1
     if (end - pos > NGX_SPDY_STATE_BUFFER_SIZE) {
         ngx_log_error(NGX_LOG_ALERT, sc->connection->log, 0,
                       "spdy state buffer overflow: "
@@ -1830,6 +1830,7 @@ ngx_http_spdy_create_stream(ngx_http_spdy_connection_t *sc, ngx_uint_t id,
     fc->log = log;
     fc->buffered = 0;
     fc->sndlowat = 1;
+    fc->tcp_nodelay = NGX_TCP_NODELAY_DISABLED;
 
     r = ngx_http_create_request(fc);
     if (r == NULL) {
@@ -2528,13 +2529,6 @@ ngx_http_spdy_init_request_body(ngx_http_request_t *r)
             return NGX_ERROR;
         }
 
-        if (rb->rest == 0) {
-            buf->in_file = 1;
-            buf->file = &tf->file;
-        } else {
-            rb->buf = buf;
-        }
-
     } else {
 
         if (rb->rest == 0) {
@@ -2545,9 +2539,9 @@ ngx_http_spdy_init_request_body(ngx_http_request_t *r)
         if (buf == NULL) {
             return NGX_ERROR;
         }
-
-        rb->buf = buf;
     }
+
+    rb->buf = buf;
 
     rb->bufs = ngx_alloc_chain_link(r->pool);
     if (rb->bufs == NULL) {
@@ -2630,6 +2624,10 @@ ngx_http_spdy_close_stream(ngx_http_spdy_stream_t *stream, ngx_int_t rc)
         {
             sc->connection->error = 1;
         }
+    }
+
+    if (sc->stream == stream) {
+        sc->stream = NULL;
     }
 
     sscf = ngx_http_get_module_srv_conf(sc->http_connection->conf_ctx,

@@ -423,20 +423,6 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
 
     if (n == NGX_AGAIN) {
 
-#if (NGX_HAVE_DEFERRED_ACCEPT && defined TCP_DEFER_ACCEPT)
-        if (c->listening->deferred_accept
-#if (NGX_HTTP_SSL)
-            && c->ssl == NULL
-#endif
-            )
-        {
-            ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT,
-                          "client timed out in deferred accept");
-            ngx_http_close_connection(c);
-            return;
-        }
-#endif
-
         if (!rev->timer_set) {
             ngx_add_timer(rev, c->listening->post_accept_timeout);
             ngx_reusable_connection(c, 1);
@@ -634,15 +620,6 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 
     if (n == -1) {
         if (err == NGX_EAGAIN) {
-
-#if (NGX_HAVE_DEFERRED_ACCEPT && defined TCP_DEFER_ACCEPT)
-            if (c->listening->deferred_accept) {
-                ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT,
-                              "client timed out in deferred accept");
-                ngx_http_close_connection(c);
-                return;
-            }
-#endif
 
             if (!rev->timer_set) {
                 ngx_add_timer(rev, c->listening->post_accept_timeout);
@@ -2014,7 +1991,7 @@ ngx_http_set_virtual_server(ngx_http_request_t *r, ngx_str_t *host)
 
     hc = r->http_connection;
 
-#ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
+#if (NGX_HTTP_SSL && defined SSL_CTRL_SET_TLSEXT_HOSTNAME)
 
     if (hc->ssl_servername) {
         if (hc->ssl_servername->len == host->len
@@ -2045,7 +2022,7 @@ ngx_http_set_virtual_server(ngx_http_request_t *r, ngx_str_t *host)
         return NGX_ERROR;
     }
 
-#ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
+#if (NGX_HTTP_SSL && defined SSL_CTRL_SET_TLSEXT_HOSTNAME)
 
     if (hc->ssl_servername) {
         ngx_http_ssl_srv_conf_t  *sscf;
@@ -2112,7 +2089,7 @@ ngx_http_find_virtual_server(ngx_connection_t *c,
 
         sn = virtual_names->regex;
 
-#ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
+#if (NGX_HTTP_SSL && defined SSL_CTRL_SET_TLSEXT_HOSTNAME)
 
         if (r == NULL) {
             ngx_http_connection_t  *hc;
@@ -2144,7 +2121,7 @@ ngx_http_find_virtual_server(ngx_connection_t *c,
             return NGX_DECLINED;
         }
 
-#endif /* SSL_CTRL_SET_TLSEXT_HOSTNAME */
+#endif /* NGX_HTTP_SSL && defined SSL_CTRL_SET_TLSEXT_HOSTNAME */
 
         for (i = 0; i < virtual_names->nregex; i++) {
 
