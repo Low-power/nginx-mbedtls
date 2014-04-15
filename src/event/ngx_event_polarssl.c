@@ -160,15 +160,17 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
     ngx_str_t *key)
 {
     int  sslerr;
+    pk_context pk;
+    pk_init( &pk );
 
     if (ngx_conf_full_name(cf->cycle, cert, 1) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    sslerr = x509parse_crtfile(&ssl->own_cert, (char *) cert->data);
+    sslerr = x509_crt_parse_file(&ssl->own_cert, (char *) cert->data);
     if (sslerr != 0) {
         ngx_polarssl_error(NGX_LOG_EMERG, ssl->log, 0, sslerr,
-                           "x509parse_crtfile(%p, \"%s\") failed",
+                           "x509_crt_parse_file(%p, \"%s\") failed",
                            &ssl->own_cert, cert->data);
         return NGX_ERROR;
     }
@@ -177,10 +179,10 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
         return NGX_ERROR;
     }
 
-    sslerr = x509parse_keyfile(&ssl->own_key, (char *) key->data, NULL);
+    sslerr = pk_parse_keyfile( &pk, (char *) key->data, NULL);
     if (sslerr != 0) {
         ngx_polarssl_error(NGX_LOG_EMERG, ssl->log, 0, sslerr,
-                           "x509parse_keyfile(%p, \"%s\", NULL) failed",
+                           "pk_parse_keyfile(%p, \"%s\", NULL) failed",
                            &ssl->own_key, key->data);
         return NGX_ERROR;
     }
@@ -205,10 +207,10 @@ ngx_ssl_client_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
         return NGX_ERROR;
     }
 
-    sslerr = x509parse_crtfile(&ssl->ca_cert, (char *) cert->data);
+    sslerr = x509_crt_parse_file(&ssl->ca_cert, (char *) cert->data);
     if (sslerr != 0) {
         ngx_polarssl_error(NGX_LOG_EMERG, ssl->log, 0, sslerr,
-                           "x509parse_crtfile(%p, \"%s\") failed",
+                           "x509_crt_parse_file(%p, \"%s\") failed",
                            &ssl->ca_cert, cert->data);
         return NGX_ERROR;
     }
@@ -235,10 +237,10 @@ ngx_ssl_trusted_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
 
     /* Just add the certificate to the CA cert chain */
 
-    sslerr = x509parse_crtfile(&ssl->ca_cert, (char *) cert->data);
+    sslerr = x509_crt_parse_file(&ssl->ca_cert, (char *) cert->data);
     if (sslerr != 0) {
         ngx_polarssl_error(NGX_LOG_EMERG, ssl->log, 0, sslerr,
-                           "x509parse_crtfile(%p, \"%s\") failed",
+                           "x509_crt_parse_file(%p, \"%s\") failed",
                            &ssl->ca_cert, cert->data);
         return NGX_ERROR;
     }
@@ -262,10 +264,10 @@ ngx_ssl_crl(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *crl)
         return NGX_ERROR;
     }
 
-    sslerr = x509parse_crlfile(&ssl->ca_crl, (char *) crl->data);
+    sslerr = x509_crl_parse_file(&ssl->ca_crl, (char *) crl->data);
     if (sslerr != 0) {
         ngx_polarssl_error(NGX_LOG_EMERG, ssl->log, 0, sslerr,
-                           "x509parse_crlfile(%p, \"%s\") failed",
+                           "x509_crl_parse_file(%p, \"%s\") failed",
                            &ssl->ca_crl, crl->data, sslerr);
         return NGX_ERROR;
     }
@@ -979,7 +981,7 @@ ngx_ssl_get_subject_dn(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
         return NGX_ERROR;
     }
 
-    len = x509parse_dn_gets((char *) s->data, POLARSSL_DN_MAX_LENGTH - 1,
+    len = x509_dn_gets((char *) s->data, POLARSSL_DN_MAX_LENGTH - 1,
                             &cert->subject);
     if (len < 0) {
         return NGX_ERROR;
@@ -1007,7 +1009,7 @@ ngx_ssl_get_issuer_dn(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
         return NGX_ERROR;
     }
 
-    len = x509parse_dn_gets((char *) s->data, POLARSSL_DN_MAX_LENGTH - 1,
+    len = x509_dn_gets((char *) s->data, POLARSSL_DN_MAX_LENGTH - 1,
                              &cert->issuer);
     if (len < 0) {
         return NGX_ERROR;
@@ -1036,7 +1038,7 @@ ngx_ssl_get_serial_number(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
         return NGX_ERROR;
     }
 
-    len = x509parse_serial_gets((char *) s->data, len - 1, &cert->serial);
+    len = x509_serial_gets((char *) s->data, len - 1, &cert->serial);
     if (len < 0) {
         return NGX_ERROR;
     }
@@ -1826,11 +1828,11 @@ ngx_ssl_cleanup_ctx(void *data)
 
     dhm_free(&ssl->dhm_ctx);
     if (ssl->have_own_cert) {
-        x509_free(&ssl->own_cert);
+        x509_crt_free(&ssl->own_cert);
         rsa_free(&ssl->own_key);
     }
     if (ssl->have_ca_cert) {
-        x509_free(&ssl->ca_cert);
+        x509_crt_free(&ssl->ca_cert);
     }
     if (ssl->have_ca_crl) {
         x509_crl_free(&ssl->ca_crl);
