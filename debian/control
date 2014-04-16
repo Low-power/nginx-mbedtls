@@ -1,13 +1,8 @@
 Source: nginx
 Section: httpd
 Priority: optional
-Maintainer: Kartik Mistry <kartik@debian.org>
-Uploaders: Jose Parrella <bureado@debian.org>,
-           Fabio Tranchitella <kobold@debian.org>,
-           Michael Lustfield <michael@lustfield.net>,
-           Dmitry E. Oboukhov <unera@debian.org>,
-           Cyril Lavier <cyril.lavier@davromaniak.eu>,
-           Christos Trochalakis <yatiohi@ideopolis.gr>
+Maintainer: Aline Freitas <aline@alinefreitas.com.br>
+Uploaders: Aline Freitas <aline@alinefreitas.com.br>
 Build-Depends: autotools-dev,
                debhelper (>= 9),
                dh-systemd (>= 1.5),
@@ -29,26 +24,26 @@ Homepage: http://nginx.net
 Vcs-Git: git://anonscm.debian.org/collab-maint/nginx.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/nginx.git;a=summary
 
-Package: nginx
+Package: nginx-polarssl
 Architecture: all
-Depends: nginx-full   (>= ${source:Version}) |
-         nginx-light  (>= ${source:Version}) |
-         nginx-extras (>= ${source:Version}) |
-         nginx-naxsi  (>= ${source:Version}) ,
-         nginx-full   (<< ${source:Version}.1~) |
-         nginx-light  (<< ${source:Version}.1~) |
-         nginx-extras (<< ${source:Version}.1~) |
-         nginx-naxsi  (<< ${source:Version}.1~) ,
+Depends: nginx-polarssl-full   (>= ${source:Version}) |
+         nginx-polarssl-light  (>= ${source:Version}) |
+         nginx-polarssl-extras (>= ${source:Version}) |
+         nginx-polarssl-naxsi  (>= ${source:Version}) ,
+         nginx-polarssl-full   (<< ${source:Version}.1~) |
+         nginx-polarssl-light  (<< ${source:Version}.1~) |
+         nginx-polarssl-extras (<< ${source:Version}.1~) |
+         nginx-polarssl-naxsi  (<< ${source:Version}.1~) ,
          ${misc:Depends}
 Description: small, powerful, scalable web/proxy server
  Nginx ("engine X") is a high-performance web and reverse proxy server
  created by Igor Sysoev. It can be used both as a standalone web server
  and as a proxy to reduce the load on back-end HTTP or mail servers.
  .
- This is a dependency package to install either nginx-full (by default) or
- nginx-light.
+ This is a dependency package to install either nginx-polarssl-full (by default) or
+ nginx-polarssl-light.
 
-Package: nginx-doc
+Package: nginx-polarssl-doc
 Architecture: all
 Section: doc
 Depends: lsb-base (>= 3.2-14), ${misc:Depends}
@@ -59,18 +54,18 @@ Description: small, powerful, scalable web/proxy server - documentation
  .
  This package provides extra documentation to help unleash the power of Nginx.
 
-Package: nginx-common
+Package: nginx-polarssl-common
 Architecture: all
 Depends: lsb-base (>= 3.2-14), ${misc:Depends}
-Replaces: nginx (<< 0.8.54-4),
-          nginx-extras (<< 0.8.54-4),
-          nginx-full (<< 0.8.54-4),
-          nginx-light (<< 0.8.54-4)
-Breaks: nginx (<< 0.8.54-4),
-        nginx-extras (<< 0.8.54-4),
-        nginx-full (<< 0.8.54-4),
-        nginx-light (<< 0.8.54-4)
-Suggests: fcgiwrap, nginx-doc
+Replaces: nginx-polarssl (<< 0.8.54-4),
+          nginx-polarssl-extras (<< 0.8.54-4),
+          nginx-polarssl-full (<< 0.8.54-4),
+          nginx-polarssl-light (<< 0.8.54-4)
+Breaks: nginx-polarssl (<< 0.8.54-4),
+        nginx-polarssl-extras (<< 0.8.54-4),
+        nginx-polarssl-full (<< 0.8.54-4),
+        nginx-polarssl-light (<< 0.8.54-4)
+Suggests: fcgiwrap, nginx-polarssl-doc
 Description: small, powerful, scalable web/proxy server - common files
  Nginx ("engine X") is a high-performance web and reverse proxy server
  created by Igor Sysoev. It can be used both as a standalone web server
@@ -79,13 +74,13 @@ Description: small, powerful, scalable web/proxy server - common files
  This package contains base configuration files used by all versions of
  nginx.
 
-Package: nginx-full
+Package: nginx-polarssl-full
 Architecture: any
-Depends: nginx-common (= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}
-Breaks: nginx (<< 1.4.5-1)
-Provides: httpd, httpd-cgi, nginx
-Conflicts: nginx-extras, nginx-light, nginx-naxsi
-Suggests: nginx-doc (= ${source:Version})
+Depends: nginx-polarssl-common (= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}
+Breaks: nginx-polarssl (<< 1.4.5-1)
+Provides: httpd, httpd-cgi, nginx, nginx-polarssl
+Conflicts: nginx-extras, nginx-light, nginx-naxsi, nginx-polarssl-extras, nginx-polarssl-light, nginx-polarssl-naxsi
+Suggests: nginx-polarssl-doc (= ${source:Version})
 Description: nginx web/proxy server (standard version)
  Nginx ("engine X") is a high-performance web and reverse proxy server
  created by Igor Sysoev. It can be used both as a standalone web server
@@ -109,28 +104,28 @@ Description: nginx web/proxy server (standard version)
  THIRD PARTY MODULES: Auth PAM, DAV Ext, Echo, HTTP Substitution Filter,
  Upstream Fair Queue.
 
-Package: nginx-full-dbg
+Package: nginx-polarssl-full-dbg
 Architecture: any
 Section: debug
 Priority: extra
-Depends: nginx-full (= ${binary:Version}), ${misc:Depends}
-Conflicts: nginx-extras-dbg, nginx-light-dbg, nginx-naxsi-dbg
+Depends: nginx-polarssl-full (= ${binary:Version}), ${misc:Depends}
+Conflicts: nginx-extras-dbg, nginx-light-dbg, nginx-naxsi-dbg, nginx-polarssl-extras-dbg, nginx-polarssl-light-dbg, nginx-polarssl-naxsi-dbg
 Description: nginx web/proxy server (standard version) - debugging symbols
  Nginx ("engine X") is a high-performance web and reverse proxy server
  created by Igor Sysoev. It can be used both as a standalone web server
  and as a proxy to reduce the load on back-end HTTP or mail servers.
  .
- This package provides debugging symbols for nginx-full, to assist in debugging
+ This package provides debugging symbols for nginx-polarssl-full, to assist in debugging
  issues that you may find. It should not be required for normal operation.
 
-Package: nginx-light
+Package: nginx-polarssl-light
 Architecture: any
 Priority: extra
-Depends: nginx-common (= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}
-Breaks: nginx (<< 1.4.5-1)
+Depends: nginx-polarssl-common (= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}
+Breaks: nginx-polarssl (<< 1.4.5-1)
 Provides: httpd, httpd-cgi, nginx
-Conflicts: nginx-extras, nginx-full, nginx-naxsi
-Suggests: nginx-doc (= ${source:Version})
+Conflicts: nginx-extras, nginx-full, nginx-naxsi, nginx-polarssl-extras, nginx-polarssl-full, nginx-polarssl-naxsi
+Suggests: nginx-polarssl-doc (= ${source:Version})
 Description: nginx web/proxy server (basic version)
  Nginx ("engine X") is a high-performance web and reverse proxy server
  created by Igor Sysoev. It can be used both as a standalone web server
@@ -147,12 +142,12 @@ Description: nginx web/proxy server (basic version)
  .
  THIRD PARTY MODULES: Echo.
 
-Package: nginx-light-dbg
+Package: nginx-polarssl-light-dbg
 Architecture: any
 Section: debug
 Priority: extra
-Depends: nginx-light (= ${binary:Version}), ${misc:Depends}
-Conflicts: nginx-extras-dbg, nginx-full-dbg, nginx-naxsi-dbg
+Depends: nginx-polarssl-light (= ${binary:Version}), ${misc:Depends}
+Conflicts: nginx-extras-dbg, nginx-full-dbg, nginx-naxsi-dbg, nginx-polarssl-extras-dbg, nginx-polarssl-full-dbg, nginx-polarssl-naxsi-dbg
 Description: nginx web/proxy server (basic version) - debugging symbols
  Nginx ("engine X") is a high-performance web and reverse proxy server
  created by Igor Sysoev. It can be used both as a standalone web server
@@ -162,17 +157,17 @@ Description: nginx web/proxy server (basic version) - debugging symbols
  debugging issues that you may find. It should not be required for normal
  operation.
 
-Package: nginx-extras
+Package: nginx-polarssl-extras
 Architecture: any
 Priority: extra
-Depends: nginx-common (= ${source:Version}),
+Depends: nginx-polarssl-common (= ${source:Version}),
          ${misc:Depends},
          ${perl:Depends},
          ${shlibs:Depends}
-Breaks: nginx (<< 1.4.5-1)
-Provides: httpd, httpd-cgi, nginx
-Conflicts: nginx-full, nginx-light, nginx-naxsi
-Suggests: nginx-doc (= ${source:Version})
+Breaks: nginx-polarssl (<< 1.4.5-1)
+Provides: httpd, httpd-cgi, nginx, nginx-polarssl
+Conflicts: nginx-full, nginx-light, nginx-naxsi, nginx-polarssl-full, nginx-polarssl-light, nginx-polarssl-naxsi
+Suggests: nginx-polarssl-doc (= ${source:Version})
 Description: nginx web/proxy server (extended version)
  Nginx ("engine X") is a high-performance web and reverse proxy server
  created by Igor Sysoev. It can be used both as a standalone web server
@@ -197,12 +192,12 @@ Description: nginx web/proxy server (extended version)
  Fancy Index, HttpHeadersMore, HTTP Substitution Filter, http push,
  Nginx Development Kit, Upload Progress, Upstream Fair Queue.
 
-Package: nginx-extras-dbg
+Package: nginx-polarssl-extras-dbg
 Architecture: any
 Section: debug
 Priority: extra
-Depends: nginx-extras (= ${binary:Version}), ${misc:Depends}
-Conflicts: nginx-full-dbg, nginx-light-dbg, nginx-naxsi-dbg
+Depends: nginx-polarssl-extras (= ${binary:Version}), ${misc:Depends}
+Conflicts: nginx-full-dbg, nginx-light-dbg, nginx-naxsi-dbg, nginx-polarssl-full-dbg, nginx-polarssl-light-dbg, nginx-polarssl-naxsi-dbg
 Description: nginx web/proxy server (extended version) - debugging symbols
  Nginx ("engine X") is a high-performance web and reverse proxy server
  created by Igor Sysoev. It can be used both as a standalone web server
@@ -212,14 +207,14 @@ Description: nginx web/proxy server (extended version) - debugging symbols
  debugging issues that you may find. It should not be required for normal
  operation.
 
-Package: nginx-naxsi
+Package: nginx-polarssl-naxsi
 Architecture: any
 Priority: extra
-Depends: nginx-common (= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}
-Breaks: nginx (<< 1.4.5-1),
-        nginx-naxsi-ui (<< 1.4.5-1)
-Provides: httpd, httpd-cgi, nginx
-Conflicts: nginx-extras, nginx-full, nginx-light
+Depends: nginx-polarssl-common (= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}
+Breaks: nginx-polarssl (<< 1.4.5-1),
+        nginx-polarssl-naxsi-ui (<< 1.4.5-1)
+Provides: httpd, httpd-cgi, nginx, nginx-polarssl
+Conflicts: nginx-polarssl-extras, nginx-polarssl-full, nginx-polarssl-light
 Description: nginx web/proxy server (version with naxsi)
  Nginx ("engine X") is a high-performance web and reverse proxy server
  created by Igor Sysoev. It can be used both as a standalone web server
@@ -237,12 +232,12 @@ Description: nginx web/proxy server (version with naxsi)
  .
  THIRD PARTY MODULES: Naxsi, Cache Purge, Upstream Fair.
 
-Package: nginx-naxsi-dbg
+Package: nginx-polarssl-naxsi-dbg
 Architecture: any
 Section: debug
 Priority: extra
-Depends: nginx-naxsi (= ${binary:Version}), ${misc:Depends}
-Conflicts: nginx-extras-dbg, nginx-full-dbg, nginx-light-dbg
+Depends: nginx-polarssl-naxsi (= ${binary:Version}), ${misc:Depends}
+Conflicts: nginx-extras-dbg, nginx-full-dbg, nginx-light-dbg, nginx-polarssl-extras-dbg, nginx-polarssl-full-dbg, nginx-polarssl-light-dbg
 Description: nginx web/proxy server (version with naxsi) - debugging symbols
  Nginx ("engine X") is a high-performance web and reverse proxy server
  created by Igor Sysoev. It can be used both as a standalone web server
@@ -252,13 +247,13 @@ Description: nginx web/proxy server (version with naxsi) - debugging symbols
  debugging issues that you may find. It should not be required for normal
  operation.
 
-Package: nginx-naxsi-ui
+Package: nginx-polarssl-naxsi-ui
 Architecture: all
 Priority: extra
 Depends: daemon,
          dbconfig-common,
-         nginx-naxsi (>= ${source:Version}),
-         nginx-naxsi (<< ${source:Version}.1~),
+         nginx-polarssl-naxsi (>= ${source:Version}),
+         nginx-polarssl-naxsi (<< ${source:Version}.1~),
          python-twisted-web,
          ${misc:Depends}
 Description: nginx web/proxy server - naxsi configuration front-end

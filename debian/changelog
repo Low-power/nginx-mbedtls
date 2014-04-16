@@ -1,3 +1,10 @@
+nginx (1.4.7-1.1) unstable; urgency=medium
+
+  [ Aline Freitas ]
+  * Add support for polarssl instead of openssl.
+  
+ -- Aline Freitas <aline@alinefreitas.com.br>  Wed, 16 Apr 2014 11:14:16 -0300
+
 nginx (1.4.7-1) unstable; urgency=medium
 
   [ Christos Trochalakis ]

@@ -1,0 +1,4 @@
+[submodule "debian/modules/polarssl"]
+	path = debian/modules/polarssl
+	url = git@github.com:polarssl/polarssl.git
+	branch = polarssl-1.3
