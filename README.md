@@ -16,6 +16,32 @@ PolarSSL seemed like an amazing library and the author felt that a simple projec
 Installation
 --------
 
+#### Ubuntu Saucy
+
+Import my gpg public-key: 
+
+```!bash
+wget -O http://alinefr-ubuntu.s3.amazonaws.com/conf/aline.gpg.key|sudo apt-key add -
+```
+
+Then add this line in your `/etc/apt/sources.list`
+```
+deb http://alinefr-ubuntu.s3.amazonaws.com saucy main
+```
+
+Then you just need to
+```
+sudo aptitude install nginx-polarssl
+```
+
+You could choose one of the default flavours, which works in the same way as the nginx official packages, which are `light`, `full`, `extras` or `naxsi`, for example:
+
+```
+sudo aptitude install nginx-polarssl-extras
+```
+
+#### Building
+
 See [nginx's installation options](http://wiki.nginx.org/InstallOptions) for how to configure/install nginx.
 
 This fork adds:
