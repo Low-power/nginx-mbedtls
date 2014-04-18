@@ -3774,13 +3774,7 @@ ngx_http_proxy_set_ssl(ngx_conf_t *cf, ngx_http_proxy_loc_conf_t *plcf)
         return NGX_ERROR;
     }
 
-    if (SSL_CTX_set_cipher_list(plcf->upstream.ssl->ctx,
-                                (const char *) plcf->ssl_ciphers.data)
-        == 0)
-    {
-        ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0,
-                      "SSL_CTX_set_cipher_list(\"%V\") failed",
-                      &plcf->ssl_ciphers);
+    if (ngx_ssl_cipher_list(cf, plcf->upstream.ssl, &plcf->ssl_ciphers ) != NGX_OK) {
         return NGX_ERROR;
     }
 

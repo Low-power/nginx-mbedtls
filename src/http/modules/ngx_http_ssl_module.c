@@ -270,8 +270,13 @@ static ngx_http_variable_t  ngx_http_ssl_vars[] = {
     { ngx_string("ssl_session_id"), NULL, ngx_http_ssl_variable,
       (uintptr_t) ngx_ssl_get_session_id, NGX_HTTP_VAR_CHANGEABLE, 0 },
 
+#ifdef NGX_OPENSSL
+
     { ngx_string("ssl_session_reused"), NULL, ngx_http_ssl_variable,
       (uintptr_t) ngx_ssl_get_session_reused, NGX_HTTP_VAR_CHANGEABLE, 0 },
+
+#endif
+
 
     { ngx_string("ssl_client_cert"), NULL, ngx_http_ssl_variable,
       (uintptr_t) ngx_ssl_get_certificate, NGX_HTTP_VAR_CHANGEABLE, 0 },
@@ -629,7 +634,7 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 #elif (NGX_POLARSSL)
 
     ngx_ssl_sni_fn(conf->ssl.ctx, ngx_http_ssl_polarssl_sni);
-
+    
 #endif
 
 #ifdef TLSEXT_TYPE_application_layer_protocol_negotiation

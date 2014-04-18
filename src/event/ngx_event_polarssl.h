@@ -38,6 +38,7 @@ typedef struct {
     ssize_t                     builtin_session_cache;
     ngx_shm_zone_t             *cache_shm_zone;
     time_t                      cache_ttl;
+    size_t                      buffer_size;
 
     ngx_uint_t                  minor_min;
     ngx_uint_t                  minor_max;
@@ -137,6 +138,8 @@ void ngx_ssl_sni_fn(ngx_ssl_t *ssl, int (*sni_fn)(void *, ssl_context *,
 ngx_int_t ngx_ssl_session_cache(ngx_ssl_t *ssl, ngx_str_t *sess_ctx,
     ssize_t builtin_session_cache, ngx_shm_zone_t *shm_zone, time_t timeout);
 ngx_int_t ngx_ssl_session_cache_init(ngx_shm_zone_t *shm_zone, void *data);
+ngx_int_t ngx_ssl_session_ticket_keys(ngx_conf_t *cf, ngx_ssl_t *ssl,
+        ngx_array_t *paths);
 void ngx_ssl_remove_cached_session(ngx_ssl_t *ssl, ngx_ssl_session_t *sess);
 ngx_int_t ngx_ssl_set_session(ngx_connection_t *c, ngx_ssl_session_t *session);
 ngx_ssl_session_t *ngx_ssl_get_session(ngx_connection_t *c);
@@ -184,5 +187,6 @@ void ngx_cdecl ngx_ssl_error(ngx_uint_t level, ngx_log_t *log, ngx_err_t err,
     char *fmt, ...);
 void ngx_ssl_cleanup_ctx(void *data);
 
+extern int  ngx_ssl_session_ticket_keys_index;
 
 #endif /* _NGX_EVENT_POLARSSL_H_INCLUDED_ */

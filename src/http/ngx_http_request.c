@@ -1893,7 +1893,7 @@ ngx_http_process_request(ngx_http_request_t *r)
 #if (NGX_HTTP_SSL)
 
     if (r->http_connection->ssl) {
-        ngx_int_t                 err;
+        // ngx_int_t                 err;
         long                      rc;
         const char               *errstr;
         ngx_http_ssl_srv_conf_t  *sscf;
