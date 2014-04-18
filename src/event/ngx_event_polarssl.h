@@ -38,6 +38,10 @@ typedef struct {
     ssize_t                     builtin_session_cache;
     ngx_shm_zone_t             *cache_shm_zone;
     time_t                      cache_ttl;
+<<<<<<< HEAD
+=======
+    size_t                      buffer_size;
+>>>>>>> nginx-1.5
 
     ngx_uint_t                  minor_min;
     ngx_uint_t                  minor_max;
@@ -137,6 +141,11 @@ void ngx_ssl_sni_fn(ngx_ssl_t *ssl, int (*sni_fn)(void *, ssl_context *,
 ngx_int_t ngx_ssl_session_cache(ngx_ssl_t *ssl, ngx_str_t *sess_ctx,
     ssize_t builtin_session_cache, ngx_shm_zone_t *shm_zone, time_t timeout);
 ngx_int_t ngx_ssl_session_cache_init(ngx_shm_zone_t *shm_zone, void *data);
+<<<<<<< HEAD
+=======
+ngx_int_t ngx_ssl_session_ticket_keys(ngx_conf_t *cf, ngx_ssl_t *ssl,
+        ngx_array_t *paths);
+>>>>>>> nginx-1.5
 void ngx_ssl_remove_cached_session(ngx_ssl_t *ssl, ngx_ssl_session_t *sess);
 ngx_int_t ngx_ssl_set_session(ngx_connection_t *c, ngx_ssl_session_t *session);
 ngx_ssl_session_t *ngx_ssl_get_session(ngx_connection_t *c);

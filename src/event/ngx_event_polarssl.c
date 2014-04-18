@@ -453,6 +453,16 @@ ngx_ssl_session_cache_init(ngx_shm_zone_t *shm_zone, void *data)
     return NGX_OK;
 }
 
+ngx_int_t
+ngx_ssl_session_ticket_keys(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_array_t *paths)
+{
+    if (paths) {
+        ngx_log_error(NGX_LOG_WARN, ssl->log, 0,
+                      "\"ssl_session_ticket_keys\" ignored, not supported");
+    }
+
+    return NGX_OK;
+}
 
 void
 ngx_ssl_remove_cached_session(ngx_ssl_t *ssl, ngx_ssl_session_t *sess)
