@@ -641,6 +641,10 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     SSL_CTX_set_alpn_select_cb(conf->ssl.ctx, ngx_http_ssl_alpn_select, NULL);
 #endif
 
+#ifdef TLSEXT_TYPE_application_layer_protocol_negotiation
+    SSL_CTX_set_alpn_select_cb(conf->ssl.ctx, ngx_http_ssl_alpn_select, NULL);
+#endif
+
 #ifdef TLSEXT_TYPE_next_proto_neg
     SSL_CTX_set_next_protos_advertised_cb(conf->ssl.ctx,
                                           ngx_http_ssl_npn_advertised, NULL);
