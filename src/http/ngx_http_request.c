@@ -925,6 +925,7 @@ ngx_http_ssl_mbedtls_sni(void *arg, struct mbedtls_ssl_context *ssl_conn,
     hc = c->data;
 
     host.len = ngx_strlen(servername);
+    host.data = (unsigned char *)servername;
 
     len = ngx_http_validate_host(&host, c->pool, 1);
 
