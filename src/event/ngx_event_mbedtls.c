@@ -1081,7 +1081,6 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
     ngx_ssl_conn_t           *ssl_ctx;
     ngx_ssl_session_cache_t  *cache;
     int                       sslerr;
-    struct mbedtls_ssl_config config;
 
     sc = ngx_pcalloc(c->pool, sizeof(ngx_ssl_connection_t));
     if (sc == NULL) {
@@ -1090,10 +1089,14 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
 
     sc->buffer = ((flags % NGX_SSL_BUFFER) != 0);
 
-    /* Allocate the PolarSSL context */
+    /* Allocate the Mbed TLS config and context */
+
+    sc->config = ngx_pcalloc(c->pool, sizeof(struct mbedtls_ssl_config));
+    if (!sc) return NGX_ERROR;
 
     ssl_ctx = ngx_pcalloc(c->pool, sizeof(ngx_ssl_conn_t));
     if (sc == NULL) {
+        ngx_pfree(c->pool, sc->config);
         return NGX_ERROR;
     }
 
@@ -1104,25 +1107,25 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
      * here since each ssl_ctx is unique to each fd.
      */
 
-    mbedtls_ssl_config_init(&config);
+    mbedtls_ssl_config_init(sc->config);
     mbedtls_ssl_init(ssl_ctx);
 
     if (flags & NGX_SSL_CLIENT) {
-        mbedtls_ssl_conf_endpoint(&config, MBEDTLS_SSL_IS_CLIENT);
+        mbedtls_ssl_conf_endpoint(sc->config, MBEDTLS_SSL_IS_CLIENT);
 
         if (ssl->have_own_cert) {
-            mbedtls_ssl_conf_own_cert(&config, &ssl->own_cert, &ssl->own_key);
+            mbedtls_ssl_conf_own_cert(sc->config, &ssl->own_cert, &ssl->own_key);
         }
     } else {
-        mbedtls_ssl_conf_endpoint(&config, MBEDTLS_SSL_IS_SERVER);
-        mbedtls_ssl_conf_own_cert(&config, &ssl->own_cert, &ssl->own_key);
+        mbedtls_ssl_conf_endpoint(sc->config, MBEDTLS_SSL_IS_SERVER);
+        mbedtls_ssl_conf_own_cert(sc->config, &ssl->own_cert, &ssl->own_key);
     }
 
     if (ssl->have_ca_cert) {
         if (ssl->have_ca_crl) {
-            mbedtls_ssl_conf_ca_chain(&config, &ssl->ca_cert, &ssl->ca_crl);
+            mbedtls_ssl_conf_ca_chain(sc->config, &ssl->ca_cert, &ssl->ca_crl);
         } else {
-            mbedtls_ssl_conf_ca_chain(&config, &ssl->ca_cert, NULL);
+            mbedtls_ssl_conf_ca_chain(sc->config, &ssl->ca_cert, NULL);
         }
 
         /*
@@ -1130,41 +1133,41 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
          * to continue even if verification fails.  We shall do the same.
          */
 
-        mbedtls_ssl_conf_authmode(&config, MBEDTLS_SSL_VERIFY_OPTIONAL);
+        mbedtls_ssl_conf_authmode(sc->config, MBEDTLS_SSL_VERIFY_OPTIONAL);
     } else {
-        mbedtls_ssl_conf_authmode(&config, MBEDTLS_SSL_VERIFY_NONE);
+        mbedtls_ssl_conf_authmode(sc->config, MBEDTLS_SSL_VERIFY_NONE);
     }
 
-    mbedtls_ssl_conf_min_version(&config, MBEDTLS_SSL_MAJOR_VERSION_3, ssl->minor_min);
-    mbedtls_ssl_conf_max_version(&config, MBEDTLS_SSL_MAJOR_VERSION_3, ssl->minor_max);
+    mbedtls_ssl_conf_min_version(sc->config, MBEDTLS_SSL_MAJOR_VERSION_3, ssl->minor_min);
+    mbedtls_ssl_conf_max_version(sc->config, MBEDTLS_SSL_MAJOR_VERSION_3, ssl->minor_max);
 
-    mbedtls_ssl_conf_renegotiation(&config, MBEDTLS_SSL_RENEGOTIATION_ENABLED);
-    mbedtls_ssl_conf_legacy_renegotiation(&config, MBEDTLS_SSL_LEGACY_NO_RENEGOTIATION);
+    mbedtls_ssl_conf_renegotiation(sc->config, MBEDTLS_SSL_RENEGOTIATION_ENABLED);
+    mbedtls_ssl_conf_legacy_renegotiation(sc->config, MBEDTLS_SSL_LEGACY_NO_RENEGOTIATION);
 
-    mbedtls_ssl_conf_rng(&config, ngx_polarssl_rng, &ngx_ctr_drbg);
+    mbedtls_ssl_conf_rng(sc->config, ngx_polarssl_rng, &ngx_ctr_drbg);
     mbedtls_ssl_set_bio(ssl_ctx, &c->fd, mbedtls_net_send, mbedtls_net_recv, NULL);
 
-    mbedtls_ssl_conf_dh_param_ctx(&config, &ssl->dhm_ctx);
-    mbedtls_ssl_conf_ciphersuites(&config, ssl->ciphersuites);
+    mbedtls_ssl_conf_dh_param_ctx(sc->config, &ssl->dhm_ctx);
+    mbedtls_ssl_conf_ciphersuites(sc->config, ssl->ciphersuites);
 
     if (ssl->builtin_session_cache == NGX_SSL_NONE_SCACHE) {
-        mbedtls_ssl_conf_session_cache(&config, NULL,
+        mbedtls_ssl_conf_session_cache(sc->config, NULL,
                 ngx_polarssl_get_cache, ngx_polarssl_set_cache);
     }
 
-    if (ssl->builtin_session_cache != NGX_SSL_NO_SCACHE) {
+    if (ssl->builtin_session_cache != NGX_SSL_NO_SCACHE && ssl->cache_shm_zone) {
         cache = ssl->cache_shm_zone->data;
         cache->ttl = ssl->cache_ttl;
 
-        mbedtls_ssl_conf_session_cache(&config, ssl->cache_shm_zone,
+        mbedtls_ssl_conf_session_cache(sc->config, ssl->cache_shm_zone,
                 ngx_polarssl_get_cache, ngx_polarssl_set_cache);
     }
 
     if (ssl->sni_fn) {
-        mbedtls_ssl_conf_sni(&config, ssl->sni_fn, c);
+        mbedtls_ssl_conf_sni(sc->config, ssl->sni_fn, c);
     }
 
-    sslerr = mbedtls_ssl_setup(ssl_ctx, &config);
+    sslerr = mbedtls_ssl_setup(ssl_ctx, sc->config);
     if (sslerr) {
         ngx_polarssl_error(NGX_LOG_ALERT, ssl->log, 0, sslerr,
                            "mbedtls_ssl_setup failed");
@@ -1747,14 +1750,20 @@ ngx_ssl_error(ngx_uint_t level, ngx_log_t *log, ngx_err_t err, char *fmt, ...)
 }
 
 
+static void free_ssl_context(ngx_connection_t *c) {
+	mbedtls_ssl_free(c->ssl->connection);
+	ngx_pfree(c->pool, c->ssl->connection);
+	ngx_pfree(c->pool, c->ssl->config);
+	c->ssl = NULL;
+}
+
 ngx_int_t
 ngx_ssl_shutdown(ngx_connection_t *c)
 {
     int  sslerr;
 
     if (c->timedout || c->ssl->no_send_shutdown || c->ssl->no_wait_shutdown) {
-        mbedtls_ssl_free(c->ssl->connection);
-        c->ssl = NULL;
+        free_ssl_context(c);
 
         return NGX_OK;
     }
@@ -1762,8 +1771,7 @@ ngx_ssl_shutdown(ngx_connection_t *c)
     sslerr = mbedtls_ssl_close_notify(c->ssl->connection);
 
     if (sslerr == 0 || sslerr == MBEDTLS_ERR_SSL_CONN_EOF) {
-        mbedtls_ssl_free(c->ssl->connection);
-        c->ssl = NULL;
+        free_ssl_context(c);
 
         return NGX_OK;
     }
@@ -1791,8 +1799,7 @@ ngx_ssl_shutdown(ngx_connection_t *c)
     ngx_polarssl_error(NGX_LOG_ERR, c->log, 0, sslerr,
                        "ssl_close_notify() failed");
 
-    mbedtls_ssl_free(c->ssl->connection);
-    c->ssl = NULL;
+    free_ssl_context(c);
 
     return NGX_ERROR;
 }

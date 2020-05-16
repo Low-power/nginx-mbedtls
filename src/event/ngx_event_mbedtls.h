@@ -62,6 +62,7 @@ typedef struct {
 
 
 typedef struct {
+    struct mbedtls_ssl_config   *config;
     ngx_ssl_conn_t              *connection;
 
     ngx_int_t                   last;
