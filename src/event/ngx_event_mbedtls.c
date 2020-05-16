@@ -1081,6 +1081,68 @@ ngx_ssl_get_client_verify(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
 }
 
 
+static int ngx_mbedtls_read(void *context, unsigned char *buffer, size_t length) {
+	int fd = *(int *)context;
+	int r = read(fd, buffer, length);
+	if(r < 0) {
+		int e = errno;
+		switch(e) {
+			case EAGAIN:
+#if defined EWOULDBLOCK && EWOULDBLOCK != EAGAIN
+			case EWOULDBLOCK:
+#endif
+				if(fcntl(fd, F_GETFL) & (O_NONBLOCK
+#ifdef O_NDELAY
+					| O_NDELAY
+#endif
+				)) {
+					return MBEDTLS_ERR_SSL_WANT_READ;
+				}
+				break;
+			case EPIPE:
+			case ECONNRESET:
+				return MBEDTLS_ERR_NET_CONN_RESET;
+			case EINTR:
+				return MBEDTLS_ERR_SSL_WANT_READ;
+		}
+		errno = e;
+		return MBEDTLS_ERR_NET_RECV_FAILED;
+	}
+	return r;
+}
+
+static int ngx_mbedtls_write(void *context, const unsigned char *buffer, size_t length) {
+	int fd = *(int *)context;
+	int r = write(fd, buffer, length);
+	if(r < 0) {
+		int e = errno;
+		switch(e) {
+			case EAGAIN:
+#if defined EWOULDBLOCK && EWOULDBLOCK != EAGAIN
+			case EWOULDBLOCK:
+#endif
+				if(fcntl(fd, F_GETFL) & (O_NONBLOCK
+#ifdef O_NDELAY
+					| O_NDELAY
+#endif
+				)) {
+					return MBEDTLS_ERR_SSL_WANT_WRITE;
+				}
+				break;
+			case EPIPE:
+			case ECONNRESET:
+				return MBEDTLS_ERR_NET_CONN_RESET;
+			case EINTR:
+				return MBEDTLS_ERR_SSL_WANT_READ;
+		}
+		errno = e;
+		return MBEDTLS_ERR_NET_RECV_FAILED;
+	}
+	return r;
+}
+
+
+
 ngx_int_t
 ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
     ngx_uint_t flags)
@@ -1160,7 +1222,7 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
     mbedtls_ssl_conf_legacy_renegotiation(sc->config, MBEDTLS_SSL_LEGACY_NO_RENEGOTIATION);
 
     mbedtls_ssl_conf_rng(sc->config, ngx_polarssl_rng, &ngx_ctr_drbg);
-    mbedtls_ssl_set_bio(ssl_ctx, &c->fd, mbedtls_net_send, mbedtls_net_recv, NULL);
+    mbedtls_ssl_set_bio(ssl_ctx, &c->fd, ngx_mbedtls_write, ngx_mbedtls_read, NULL);
 
     mbedtls_ssl_conf_dh_param_ctx(sc->config, &ssl->dhm_ctx);
     mbedtls_ssl_conf_ciphersuites(sc->config, ssl->ciphersuites);
