@@ -943,7 +943,7 @@ ngx_http_ssl_mbedtls_sni(void *arg, struct mbedtls_ssl_context *ssl_conn,
 
     sscf = ngx_http_get_module_srv_conf(r, ngx_http_ssl_module);
 
-    if (sscf->ssl.ctx) {
+    if (sscf->ssl.data) {
         if (sscf->ssl.have_own_cert) {
 #if (NGX_POLARSSL)
             ssl_set_own_cert_rsa(ssl_conn, &sscf->ssl.own_cert, &sscf->ssl.own_key);

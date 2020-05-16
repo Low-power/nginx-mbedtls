@@ -141,6 +141,7 @@ ngx_ssl_create(ngx_ssl_t *ssl, ngx_uint_t protocols, void *data)
     ssl->have_ca_cert = 0;
     ssl->have_ca_crl = 0;
 
+    // To make the struct compatible with the OpenSSL version
     ssl->ctx = ssl;
 
     return NGX_OK;

@@ -57,7 +57,7 @@ typedef struct {
     unsigned                    have_ca_cert:1;
     unsigned                    have_ca_crl:1;
 
-    void                       *ctx;        /* Fake global state */
+    void                       *ctx;        /* Fake global state, point to current struct */
 } ngx_ssl_t;
 
 
