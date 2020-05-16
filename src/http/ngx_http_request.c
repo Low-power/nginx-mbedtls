@@ -909,7 +909,6 @@ ngx_http_ssl_mbedtls_sni(void *arg, struct mbedtls_ssl_context *ssl_conn,
 {
     ngx_connection_t         *c;
     ngx_str_t                host;
-    ngx_http_request_t       *r;
     ngx_http_connection_t    *hc;
     ngx_http_core_srv_conf_t *cscf;
     ngx_http_ssl_srv_conf_t  *sscf;
@@ -923,8 +922,7 @@ ngx_http_ssl_mbedtls_sni(void *arg, struct mbedtls_ssl_context *ssl_conn,
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                    "SSL server name: \"%s\"", servername);
 
-    r = c->data;
-    hc = r->http_connection;
+    hc = c->data;
 
     host.len = ngx_strlen(servername);
 
@@ -941,7 +939,7 @@ ngx_http_ssl_mbedtls_sni(void *arg, struct mbedtls_ssl_context *ssl_conn,
         return 0;
     }
 
-    sscf = ngx_http_get_module_srv_conf(r, ngx_http_ssl_module);
+    sscf = ngx_http_get_module_srv_conf(hc->conf_ctx, ngx_http_ssl_module);
 
     if (sscf->ssl.data) {
         if (sscf->ssl.have_own_cert) {
