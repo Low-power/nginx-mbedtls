@@ -73,12 +73,21 @@ ngx_module_t  ngx_polarssl_module = {
 ngx_int_t
 ngx_ssl_init(ngx_log_t *log)
 {
+    static const unsigned char ctr_drbg_custom[] = "nginx-mbedtls";
     mbedtls_entropy_context entropy;
+    int e;
 
     /* Initialize the PRNG */
 
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_init(&ngx_ctr_drbg);
+    e = mbedtls_ctr_drbg_seed(&ngx_ctr_drbg, mbedtls_entropy_func, &entropy,
+                               ctr_drbg_custom, sizeof ctr_drbg_custom - 1);
+    if(e) {
+        ngx_polarssl_error(NGX_LOG_ERR, log, 0, e,
+                           "mbedtls_ctr_drbg_seed failed");
+        return NGX_ERROR;
+    }
 
 #if (NGX_THREADS)
     ngx_ctr_drbg_mutex = ngx_mutex_init(log, 0);
@@ -134,7 +143,7 @@ ngx_ssl_create(ngx_ssl_t *ssl, ngx_uint_t protocols, void *data)
     ssl->ciphersuites = NULL;
     ngx_memset(&ssl->dhm_ctx, 0, sizeof(mbedtls_dhm_context));
     ngx_memset(&ssl->own_cert, 0, sizeof(mbedtls_x509_crt));
-    ngx_memset(&ssl->own_key, 0, sizeof(mbedtls_rsa_context));
+    ngx_memset(&ssl->own_key, 0, sizeof(mbedtls_pk_context));
     ngx_memset(&ssl->ca_cert, 0, sizeof(mbedtls_x509_crt));
     ngx_memset(&ssl->ca_crl, 0, sizeof(mbedtls_x509_crl));
     ssl->have_own_cert = 0;
@@ -153,8 +162,6 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
     ngx_str_t *key)
 {
     int  sslerr;
-    mbedtls_pk_context pk;
-    mbedtls_pk_init( &pk );
 
     if (ngx_conf_full_name(cf->cycle, cert, 1) != NGX_OK) {
         return NGX_ERROR;
@@ -172,7 +179,7 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
         return NGX_ERROR;
     }
 
-    sslerr = mbedtls_pk_parse_keyfile( &pk, (char *) key->data, NULL);
+    sslerr = mbedtls_pk_parse_keyfile(&ssl->own_key, (char *) key->data, NULL);
     if (sslerr != 0) {
         ngx_polarssl_error(NGX_LOG_EMERG, ssl->log, 0, sslerr,
                            "mbedtls_pk_parse_keyfile(%p, \"%s\", NULL) failed",
@@ -1093,7 +1100,7 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
     /* Allocate the Mbed TLS config and context */
 
     sc->config = ngx_pcalloc(c->pool, sizeof(struct mbedtls_ssl_config));
-    if (!sc) return NGX_ERROR;
+    if (!sc->config) return NGX_ERROR;
 
     ssl_ctx = ngx_pcalloc(c->pool, sizeof(ngx_ssl_conn_t));
     if (sc == NULL) {
@@ -1111,14 +1118,21 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c,
     mbedtls_ssl_config_init(sc->config);
     mbedtls_ssl_init(ssl_ctx);
 
-    if (flags & NGX_SSL_CLIENT) {
-        mbedtls_ssl_conf_endpoint(sc->config, MBEDTLS_SSL_IS_CLIENT);
+    sslerr = mbedtls_ssl_config_defaults(sc->config,
+                                         (flags & NGX_SSL_CLIENT) ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
+                                         MBEDTLS_SSL_TRANSPORT_STREAM,
+                                         MBEDTLS_SSL_PRESET_DEFAULT);
+    if (sslerr) {
+        ngx_polarssl_error(NGX_LOG_ALERT, ssl->log, 0, sslerr,
+                           "mbedtls_ssl_config_defaults failed");
+        return NGX_ERROR;
+    }
 
+    if (flags & NGX_SSL_CLIENT) {
         if (ssl->have_own_cert) {
             mbedtls_ssl_conf_own_cert(sc->config, &ssl->own_cert, &ssl->own_key);
         }
     } else {
-        mbedtls_ssl_conf_endpoint(sc->config, MBEDTLS_SSL_IS_SERVER);
         mbedtls_ssl_conf_own_cert(sc->config, &ssl->own_cert, &ssl->own_key);
     }
 
