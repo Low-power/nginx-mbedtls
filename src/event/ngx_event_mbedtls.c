@@ -308,7 +308,7 @@ ngx_ssl_dhparam(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *file)
 
     if (file->len == 0) {
         sslerr = mbedtls_dhm_parse_dhm(&ssl->dhm_ctx, dh1024_pem,
-                               ngx_strlen(dh1024_pem));
+                               sizeof dh1024_pem);
         if (sslerr != 0) {
             ngx_polarssl_error(NGX_LOG_EMERG, ssl->log, 0, sslerr,
                                "mbedtls_dhm_parse_dhm() failed");
