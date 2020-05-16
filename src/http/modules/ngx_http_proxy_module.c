@@ -9,6 +9,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+#define NGX_DEFAULT_CIPHERS "HIGH:!aNULL:!MD5"
 
 typedef struct ngx_http_proxy_rewrite_s  ngx_http_proxy_rewrite_t;
 
@@ -2721,9 +2722,10 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
                                  (NGX_CONF_BITMASK_SET|NGX_SSL_SSLv3
                                   |NGX_SSL_TLSv1|NGX_SSL_TLSv1_1
                                   |NGX_SSL_TLSv1_2));
-
+//#if (!NGX_MBEDTLS)
     ngx_conf_merge_str_value(conf->ssl_ciphers, prev->ssl_ciphers,
-                             "DEFAULT");
+                             NGX_DEFAULT_CIPHERS);
+//#endif
 
     if (conf->ssl && ngx_http_proxy_set_ssl(cf, conf) != NGX_OK) {
         return NGX_CONF_ERROR;

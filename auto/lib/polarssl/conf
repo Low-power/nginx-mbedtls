@@ -3,7 +3,7 @@
 # Copyright (C) Nginx, Inc.
 
 
-if [ $POLARSSL != NONE ]; then
+if [ $POLARSSL != NONE -o $MBEDTLS != NONE ]; then
 
     case "$CC" in
 
@@ -21,12 +21,18 @@ END
         ;;
 
         *)
-            have=NGX_POLARSSL . auto/have
+			if [ $MBEDTLS = NONE ]; then
+				have=NGX_POLARSSL . auto/have
+				MBEDTLS_VALUE=$POLARSSL
+			else
+				have=NGX_MBEDTLS . auto/have
+				MBEDTLS_VALUE=$MBEDTLS
+			fi
             have=NGX_SSL . auto/have
 
-            CORE_INCS="$CORE_INCS $POLARSSL/.polarssl/include"
-            CORE_DEPS="$CORE_DEPS $POLARSSL/.polarssl/include/polarssl/config.h"
-            CORE_LIBS="$CORE_LIBS $POLARSSL/.polarssl/lib/libpolarssl.a"
+            CORE_INCS="$CORE_INCS $MBEDTLS_VALUE/.polarssl/include"
+            CORE_DEPS="$CORE_DEPS $MBEDTLS_VALUE/.polarssl/include/polarssl/config.h"
+            CORE_LIBS="$CORE_LIBS $MBEDTLS_VALUE/.polarssl/lib/libpolarssl.a"
             CORE_LIBS="$CORE_LIBS $NGX_LIBDL"
         ;;
     esac
@@ -35,26 +41,45 @@ else
 
     if [ "$NGX_PLATFORM" != win32 ]; then
 
-        POLARSSL=NO
+        MBEDTLS=NO
 
-        ngx_feature="PolarSSL library"
-        ngx_feature_name="NGX_POLARSSL"
+        ngx_feature="Mbed TLS library"
+        ngx_feature_name="NGX_MBEDTLS"
         ngx_feature_run=no
-        ngx_feature_incs="#include <polarssl/config.h>
-                          #include <polarssl/ssl.h>"
+        ngx_feature_incs="#include <mbedtls/config.h>
+                          #include <mbedtls/ssl.h>"
         ngx_feature_path=
-        ngx_feature_libs="-lpolarssl"
-        ngx_feature_test="ssl_context c; ssl_init(&c);"
+        ngx_feature_libs="-lmbedtls -lmbedx509 -lmbedcrypto"
+        ngx_feature_test="mbedtls_ssl_context c; mbedtls_ssl_init(&c);"
         . auto/feature
 
         if [ $ngx_found = yes ]; then
             have=NGX_SSL . auto/have
             CORE_LIBS="$CORE_LIBS $ngx_feature_libs $NGX_LIBDL"
-            POLARSSL=YES
+            MBEDTLS=YES
+        else
+
+	        POLARSSL=NO
+
+	        ngx_feature="PolarSSL library"
+	        ngx_feature_name="NGX_POLARSSL"
+	        ngx_feature_run=no
+	        ngx_feature_incs="#include <polarssl/config.h>
+	                          #include <polarssl/ssl.h>"
+	        ngx_feature_path=
+	        ngx_feature_libs="-lpolarssl"
+	        ngx_feature_test="ssl_context c; ssl_init(&c);"
+	        . auto/feature
+
+	        if [ $ngx_found = yes ]; then
+	            have=NGX_SSL . auto/have
+	            CORE_LIBS="$CORE_LIBS $ngx_feature_libs $NGX_LIBDL"
+	            POLARSSL=YES
+	        fi
         fi
     fi
 
-    if [ $POLARSSL != YES ]; then
+    if [ $MBEDTLS != YES -a $POLARSSL != YES ]; then
 
 cat << END
 

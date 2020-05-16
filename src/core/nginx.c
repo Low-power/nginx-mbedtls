@@ -255,7 +255,7 @@ main(int argc, char *const *argv)
 #if (NGX_SSL)
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
                 "TLS SNI support enabled" NGX_LINEFEED
-#elif (NGX_POLARSSL)
+#elif (NGX_POLARSSL) || (NGX_MBEDTLS)
                 "TLS SNI support enabled" NGX_LINEFEED
 #else
                 "TLS SNI support disabled" NGX_LINEFEED
@@ -285,7 +285,7 @@ main(int argc, char *const *argv)
     }
 
     /* STUB */
-#if (NGX_OPENSSL) || (NGX_POLARSSL)
+#if (NGX_OPENSSL) || (NGX_POLARSSL) || (NGX_MBEDTLS)
     ngx_ssl_init(log);
 #endif
 

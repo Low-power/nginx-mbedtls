@@ -5,30 +5,30 @@
  * Copyright (C) Yawning Angel <yawning at schwanenlied dot me>
  */
 
-#ifndef _NGX_EVENT_POLARSSL_H_INCLUDED_
-#define _NGX_EVENT_POLARSSL_H_INCLUDED_
+#ifndef _NGX_EVENT_MBEDTLS_H_INCLUDED_
+#define _NGX_EVENT_MBEDTLS_H_INCLUDED_
 
 
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 
-#include "polarssl/base64.h"
-#include "polarssl/entropy.h"
-#include "polarssl/ctr_drbg.h"
-#include "polarssl/net.h"
-#include "polarssl/ssl.h"
-#include "polarssl/certs.h"
-#include "polarssl/x509.h"
-#include "polarssl/error.h"
-
-
-#define NGX_SSL_NAME    "PolarSSL"
+#include "mbedtls/base64.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/net.h"
+#include "mbedtls/ssl.h"
+#include "mbedtls/certs.h"
+#include "mbedtls/x509.h"
+#include "mbedtls/error.h"
 
 
-#define ngx_ssl_session_t       ssl_session
-#define ngx_ssl_conn_t          ssl_context
+#define NGX_SSL_NAME "Mbed TLS"
+
+
+#define ngx_ssl_session_t       mbedtls_ssl_session
+#define ngx_ssl_conn_t          mbedtls_ssl_context
 
 
 typedef struct {
@@ -44,13 +44,13 @@ typedef struct {
     ngx_uint_t                  minor_max;
 
     int                        *ciphersuites;
-    dhm_context                 dhm_ctx;
-    x509_crt                   own_cert;
-    rsa_context                 own_key;
-    x509_crt                    ca_cert;
-    x509_crl                    ca_crl;
+    mbedtls_dhm_context                 dhm_ctx;
+    mbedtls_x509_crt                   own_cert;
+    mbedtls_pk_context                 own_key;
+    mbedtls_x509_crt                    ca_cert;
+    mbedtls_x509_crl                    ca_crl;
 
-    int                         (*sni_fn)(void *, ssl_context *,
+    int                         (*sni_fn)(void *, struct mbedtls_ssl_context *,
                                           const unsigned char *, size_t);
 
     unsigned                    have_own_cert:1;
@@ -132,7 +132,7 @@ ngx_int_t ngx_ssl_dhparam(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *file);
 ngx_int_t ngx_ssl_ecdh_curve(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *name);
 ngx_int_t ngx_ssl_cipher_list(ngx_conf_t *cf, ngx_ssl_t *ssl,
     ngx_str_t *ciphers);
-void ngx_ssl_sni_fn(ngx_ssl_t *ssl, int (*sni_fn)(void *, ssl_context *,
+void ngx_ssl_sni_fn(ngx_ssl_t *ssl, int (*sni_fn)(void *, mbedtls_ssl_context *,
     const unsigned char *, size_t));
 
 ngx_int_t ngx_ssl_session_cache(ngx_ssl_t *ssl, ngx_str_t *sess_ctx,
@@ -150,7 +150,7 @@ ngx_int_t ngx_ssl_have_peer_cert(ngx_connection_t *c);
 ngx_int_t ngx_ssl_verify_result(ngx_connection_t *c, long *rc,
     const char **errstr);
 #define ngx_ssl_verify_error_optional(n)                                \
-    (n & BADCERT_NOT_TRUSTED)
+    (n & MBEDTLS_X509_BADCERT_NOT_TRUSTED)
 
 
 ngx_int_t ngx_ssl_get_protocol(ngx_connection_t *c, ngx_pool_t *pool,
@@ -188,4 +188,4 @@ void ngx_cdecl ngx_ssl_error(ngx_uint_t level, ngx_log_t *log, ngx_err_t err,
 void ngx_ssl_cleanup_ctx(void *data);
 
 
-#endif /* _NGX_EVENT_POLARSSL_H_INCLUDED_ */
+#endif /* _NGX_EVENT_MBEDTLS_H_INCLUDED_ */

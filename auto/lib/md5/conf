@@ -95,6 +95,26 @@ else
 
         if [ $ngx_found = no ]; then
 
+            # Mbed TLS crypto library
+
+            ngx_feature="Mbed TLS library"
+            ngx_feature_name="NGX_MBEDTLS_MD5"
+            ngx_feature_incs="#include <MBEDTLS/md5.h>"
+            ngx_feature_libs="-lmbedcrypto"
+            ngx_feature_test="mbedtls_md5_context md5; mbedtls_md5_starts(&md5)"
+            . auto/feature
+
+            ngx_md5_lib="system Mbed TLS"
+
+            if [ $ngx_found = yes ]; then
+                have=NGX_HAVE_MBEDTLS_MD5_H . auto/have
+                have=NGX_MBEDTLS_MD5 . auto/have
+                have=NGX_HAVE_MD5 . auto/have
+            fi
+        fi
+
+        if [ $ngx_found = no ]; then
+
             # PolarSSL crypto library
 
             ngx_feature="PolarSSL library"

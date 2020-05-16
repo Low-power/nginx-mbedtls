@@ -16,10 +16,15 @@ case "$CC" in
     ;;
 
     *)
+		if [ $MBEDTLS = NONE ]; then
+			MBEDTLS_VALUE=$POLARSSL
+		else
+			MBEDTLS_VALUE=$MBEDTLS
+		fi
         cat << END                                            >> $NGX_MAKEFILE
 
-$POLARSSL/.polarssl/include/polarssl/config.h:	$NGX_MAKEFILE
-	cd $POLARSSL \\
+$MBEDTLS_VALUE/.polarssl/include/polarssl/config.h:	$NGX_MAKEFILE
+	cd $MBEDTLS_VALUE \\
 	&& \$(MAKE) clean \\
 	&& \$(MAKE) no_test \\
 	&& \$(MAKE) install DESTDIR=.polarssl

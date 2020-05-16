@@ -433,10 +433,10 @@ if [ $USE_SSL = YES ]; then
         CORE_SRCS="$CORE_SRCS $OPENSSL_SRCS"
     fi
 
-    if [ $POLARSSL != NONE -o $USE_POLARSSL = YES ]; then
-        modules="$modules $POLARSSL_MODULE"
-        CORE_DEPS="$CORE_DEPS $POLARSSL_DEPS"
-        CORE_SRCS="$CORE_SRCS $POLARSSL_SRCS"
+    if [ $POLARSSL != NONE -o $USE_POLARSSL = YES ] || [ $MBEDTLS != NONE -o $USE_MBEDTLS = YES ]; then
+        modules="$modules $MBEDTLS_MODULE"
+        CORE_DEPS="$CORE_DEPS $MBEDTLS_DEPS"
+        CORE_SRCS="$CORE_SRCS $MBEDTLS_SRCS"
     fi
 fi
 

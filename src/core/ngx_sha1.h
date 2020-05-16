@@ -17,12 +17,16 @@
 #include <openssl/sha.h>
 #elif (NGX_HAVE_POLARSSL_SHA1_H)
 #include <polarssl/sha1.h>
+#elif (NGX_HAVE_MBEDTLS_SHA1_H)
+#include <mbedtls/sha1.h>
 #else
 #include <sha.h>
 #endif
 
 #if (NGX_POLARSSL_SHA1)
 typedef sha1_context    ngx_sha1_t;
+#elif (NGX_MBEDTLS_SHA1)
+typedef mbedtls_sha1_context ngx_sha1_t;
 #else
 typedef SHA_CTX         ngx_sha1_t;
 #endif
@@ -32,6 +36,12 @@ typedef SHA_CTX         ngx_sha1_t;
 #define ngx_sha1_init           sha1_starts
 #define ngx_sha1_update         sha1_update
 #define ngx_sha1_final(md, c)   sha1_finish((c), (md))
+
+#elif (NGX_MBEDTLS_SHA1)
+
+#define ngx_sha1_init           mbedtls_sha1_starts
+#define ngx_sha1_update         mbedtls_sha1_update
+#define ngx_sha1_final(md, c)   mbedtls_sha1_finish((c), (md))
 
 #else
 

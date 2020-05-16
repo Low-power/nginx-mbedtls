@@ -895,11 +895,17 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
     return SSL_TLSEXT_ERR_OK;
 }
 
-#elif (NGX_POLARSSL)
+#elif (NGX_POLARSSL) || (NGX_MBEDTLS)
 
+#if (NGX_POLARSSL)
 int
 ngx_http_ssl_polarssl_sni(void *arg, ssl_context *ssl_conn,
     const unsigned char *servername, size_t len)
+#else
+int
+ngx_http_ssl_mbedtls_sni(void *arg, struct mbedtls_ssl_context *ssl_conn,
+    const unsigned char *servername, size_t len)
+#endif
 {
     ngx_connection_t         *c;
     ngx_str_t                host;
@@ -939,25 +945,42 @@ ngx_http_ssl_polarssl_sni(void *arg, ssl_context *ssl_conn,
 
     if (sscf->ssl.ctx) {
         if (sscf->ssl.have_own_cert) {
+#if (NGX_POLARSSL)
             ssl_set_own_cert_rsa(ssl_conn, &sscf->ssl.own_cert, &sscf->ssl.own_key);
+#else
+            mbedtls_ssl_set_hs_own_cert(ssl_conn, &sscf->ssl.own_cert, &sscf->ssl.own_key);
+#endif
         }
 
         if (sscf->ssl.have_ca_cert) {
             if (sscf->ssl.have_ca_crl) {
+#if (NGX_POLARSSL)
                 ssl_set_ca_chain(ssl_conn, &sscf->ssl.ca_cert,
                                  &sscf->ssl.ca_crl, NULL);
+#else
+                mbedtls_ssl_set_hs_ca_chain(ssl_conn, &sscf->ssl.ca_cert,
+                                 &sscf->ssl.ca_crl);
+#endif
             } else {
+#if (NGX_POLARSSL)
                 ssl_set_ca_chain(ssl_conn, &sscf->ssl.ca_cert, NULL, NULL);
+#else
+                mbedtls_ssl_set_hs_ca_chain(ssl_conn, &sscf->ssl.ca_cert, NULL);
+#endif
             }
 
+#if (NGX_POLARSSL)
             ssl_set_authmode(ssl_conn, SSL_VERIFY_OPTIONAL);
+#else
+            mbedtls_ssl_set_hs_authmode(ssl_conn, MBEDTLS_SSL_VERIFY_OPTIONAL);
+#endif
         }
     }
 
     return 0;
 }
 
-#endif /* NGX_POLARSSL */
+#endif /* NGX_POLARSSL || NGX_MBEDTLS */
 
 #endif /* NGX_HTTP_SSL */
 

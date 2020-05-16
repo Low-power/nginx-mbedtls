@@ -19,6 +19,8 @@
 #include <openssl/md5.h>
 #elif (NGX_HAVE_POLARSSL_MD5_H)
 #include <polarssl/md5.h>
+#elif (NGX_HAVE_MBEDTLS_MD5_H)
+#include <mbedtls/md5.h>
 #else
 #include <md5.h>
 #endif
@@ -26,6 +28,8 @@
 
 #if (NGX_POLARSSL_MD5)
 typedef md5_context     ngx_md5_t;
+#elif (NGX_MBEDTLS_MD5)
+typedef mbedtls_md5_context     ngx_md5_t;
 #else
 typedef MD5_CTX         ngx_md5_t;
 #endif
@@ -42,6 +46,12 @@ typedef MD5_CTX         ngx_md5_t;
 #define ngx_md5_init            md5_starts
 #define ngx_md5_update          md5_update
 #define ngx_md5_final(md, c)    md5_finish((c), (md))
+
+#elif (NGX_MBEDTLS_MD5)
+
+#define ngx_md5_init            mbedtls_md5_starts
+#define ngx_md5_update          mbedtls_md5_update
+#define ngx_md5_final(md, c)    mbedtls_md5_finish((c), (md))
 
 #else
 

@@ -127,6 +127,9 @@ OPENSSL=NONE
 USE_POLARSSL=NO
 POLARSSL=NONE
 
+USE_MBEDTLS=NO
+MBEDTLS=NONE
+
 USE_MD5=NO
 MD5=NONE
 MD5_OPT=
@@ -300,6 +303,9 @@ use the \"--without-http_limit_conn_module\" option instead"
         --with-polarssl)                 USE_POLARSSL=YES           ;;
         --with-polarssl=*)               POLARSSL="$value"          ;;
         --with-polarssl-opt=*)           POLARSSL_OPT="$value"      ;;
+        --with-mbedtls)                  USE_MBEDTLS=YES           ;;
+        --with-mbedtls=*)                MBEDTLS="$value"          ;;
+        --with-mbedtls-opt=*)            MBEDTLS_OPT="$value"      ;;
 
         --with-md5=*)                    MD5="$value"               ;;
         --with-md5-opt=*)                MD5_OPT="$value"           ;;
@@ -477,6 +483,9 @@ cat << END
   --with-polarssl                    force PolarSSL library usage
   --with-polarssl=DIR                set path to PolarSSL library sources
   --with-polarssl-opt=OPTIONS        set additional build options for PolarSSL
+  --with-mbedtls                     force Mbed TLS library usage
+  --with-mbedtls=DIR                 set path to Mbed TLS library sources
+  --with-mbedtls-opt=OPTIONS         set additional build options for Mbed TLS
 
   --with-debug                       enable debug logging
 

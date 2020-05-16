@@ -55,6 +55,12 @@ case $POLARSSL in
     *)     echo "  + using PolarSSL library: $POLARSSL" ;;
 esac
 
+case $MBEDTLS in
+    YES)   echo "  + using system Mbed TLS library" ;;
+    NONE)  echo "  + Mbed TLS library is not used" ;;
+    *)     echo "  + using Mbed TLS library: $MBEDTLS" ;;
+esac
+
 case $MD5 in
     YES)   echo "  + md5: using $MD5_LIB library" ;;
     NONE)  echo "  + md5 library is not used" ;;

@@ -23,6 +23,8 @@ fi
 if [ $USE_SSL = YES ]; then
     if [ $USE_OPENSSL = YES -o $OPENSSL != NONE ]; then
         . auto/lib/openssl/conf
+    elif [ $USE_MBEDTLS = YES -o $MBEDTLS != NONE ]; then
+        . auto/lib/polarssl/conf
     elif [ $USE_POLARSSL = YES -o $POLARSSL != NONE ]; then
         . auto/lib/polarssl/conf
     else
@@ -46,6 +48,13 @@ if [ $USE_MD5 = YES ]; then
         MD5=YES
         MD5_LIB=OpenSSL
 
+    elif [ $USE_MBEDTLS = YES -o $MBEDTLS != NONE ]; then
+        have=NGX_HAVE_MBEDTLS_MD5_H . auto/have
+        have=NGX_MBEDTLS_MD5 . auto/have
+        have=NGX_HAVE_MD5 . auto/have
+        MD5=YES
+        MD5_LIB=MbedTLS
+
     elif [ $USE_POLARSSL = YES -o $POLARSSL != NONE ]; then
         have=NGX_HAVE_POLARSSL_MD5_H . auto/have
         have=NGX_POLARSSL_MD5 . auto/have
@@ -66,6 +75,13 @@ if [ $USE_SHA1 = YES ]; then
         have=NGX_HAVE_SHA1 . auto/have
         SHA1=YES
         SHA1_LIB=OpenSSL
+
+    elif [ $USE_MBEDTLS = YES -o $MBEDTLS != NONE ]; then
+        have=NGX_HAVE_MBEDTLS_SHA1_H . auto/have
+        have=NGX_MBEDTLS_SHA1 . auto/have
+        have=NGX_HAVE_SHA1 . auto/have
+        SHA1=YES
+        SHA1_LIB=MbedTLS
 
     elif [ $USE_POLARSSL = YES -o $POLARSSL != NONE ]; then
         have=NGX_HAVE_POLARSSL_SHA1_H . auto/have

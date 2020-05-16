@@ -94,6 +94,9 @@ int ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg);
 #elif (NGX_POLARSSL)
 int ngx_http_ssl_polarssl_sni(void *arg, ssl_context *ssl_conn,
     const unsigned char *servername, size_t len);
+#elif (NGX_MBEDTLS)
+int ngx_http_ssl_mbedtls_sni(void *arg, struct mbedtls_ssl_context *ssl_conn,
+    const unsigned char *servername, size_t len);
 #endif
 
 ngx_int_t ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b);

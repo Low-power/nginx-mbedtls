@@ -71,6 +71,23 @@ else
 
         if [ $ngx_found = no ]; then
 
+            # Mbed TLS library
+
+            ngx_feature="Mbed TLS library"
+            ngx_feature_incs="#include <mbedtls/sha1.h>"
+            ngx_feature_libs="-lmbedcrypto"
+            . auto/feature
+
+            ngx_sha1_lib="system Mbed TLS"
+
+            if [ $ngx_found = yes ]; then
+                have=NGX_HAVE_MBEDTLS_SHA1_H . auto/have
+                have=NGX_MBEDTLS_SHA1 . auto/have
+            fi
+        fi
+
+        if [ $ngx_found = no ]; then
+
             # PolarSSL library
 
             ngx_feature="PolarSSL library"

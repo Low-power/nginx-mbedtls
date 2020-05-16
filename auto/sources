@@ -85,6 +85,9 @@ OPENSSL_SRCS="src/event/ngx_event_openssl.c \
 POLARSSL_MODULE=ngx_polarssl_module
 POLARSSL_DEPS=src/event/ngx_event_polarssl.h
 POLARSSL_SRCS="src/event/ngx_event_polarssl.c"
+MBEDTLS_MODULE=ngx_polarssl_module
+MBEDTLS_DEPS="src/event/ngx_event_mbedtls.h"
+MBEDTLS_SRCS="src/event/ngx_event_mbedtls.c"
 
 
 EVENT_MODULES="ngx_events_module ngx_event_core_module"

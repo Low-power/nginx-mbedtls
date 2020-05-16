@@ -495,9 +495,11 @@ ngx_http_perl_init_interpreter(ngx_conf_t *cf, ngx_http_perl_main_conf_t *pmcf)
 
     if (perl) {
 
+#if 0
         if (ngx_set_environment(cf->cycle, NULL) == NULL) {
             return NGX_CONF_ERROR;
         }
+#endif
 
         if (ngx_http_perl_run_requires(aTHX_ pmcf->requires, cf->log)
             != NGX_OK)
@@ -554,9 +556,11 @@ ngx_http_perl_create_interpreter(ngx_conf_t *cf,
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, cf->log, 0, "create perl interpreter");
 
+#if 0
     if (ngx_set_environment(cf->cycle, NULL) == NULL) {
         return NULL;
     }
+#endif
 
     perl = perl_alloc();
     if (perl == NULL) {
