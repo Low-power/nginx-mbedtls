@@ -1,124 +1,24 @@
-nginx-polarssl
-========
+## nginx-mbedtls
 
-[nginx](http://www.nginx.org) with support for [PolarSSL](http://www.polarssl.org).
+[nginx](http://www.nginx.org) with support for [Mbed TLS](https://tls.mbed.org/).
 
-Overview
---------
+### Overview
 
-This is a fork of the nginx development branch that allows the user to use PolarSSL instead of OpenSSL.  This may be useful for those seeking to further minimise the memory footprint of the webserver, or for those that happen to dislike OpenSSL for some reason.
+This is a fork of the nginx-polarssl fork that upgrade from PolarSSL 1.2 to Mbed TLS 2.7. Mbed TLS has changed a lot, including its name, when upgrading to this version.
 
-Motivation
---------
-
-PolarSSL seemed like an amazing library and the author felt that a simple project to get used to the APIs was the best way to learn it's internals.  Additionally there are not many webservers that use SSL libraries other than OpenSSL ([Hiawatha](http://www.hiawatha-webserver.org/) is a notable exception), and there should be more.
-
-Installation
---------
-
-#### Ubuntu Saucy
-
-Import my gpg public-key: 
-
-```!bash
-wget -O http://alinefr-ubuntu.s3.amazonaws.com/conf/aline.gpg.key|sudo apt-key add -
-```
-
-Then add this line in your `/etc/apt/sources.list`
-```
-deb http://alinefr-ubuntu.s3.amazonaws.com saucy main
-```
-
-Then you just need to
-```
-sudo aptitude install nginx-polarssl
-```
-
-You could choose one of the default flavours, which works in the same way as the nginx official packages, which are `light`, `full`, `extras` or `naxsi`, for example:
-
-```
-sudo aptitude install nginx-polarssl-extras
-```
-
-#### Building
+### Building
 
 See [nginx's installation options](http://wiki.nginx.org/InstallOptions) for how to configure/install nginx.
 
 This fork adds:
 
-    --with-polarssl - Attempt to use the system PolarSSL installation.
-    --with-polarssl=path - Compile nginx statically with the PolarSSL source code located at "path".
+    --with-mbedtls		Attempt to use the system Mbed TLS installation.
+    --with-mbedtls=<path>	Compile nginx statically with the Mbed TLS source code located at <path> (untested).
 
-For example:
+### License
 
-    ./configure --with-http_ssl_module --with-polarssl=~/Packages/polarssl-1.2.5
-    gmake
-    gmake install
+This work are distrubuted under the [nginx license](http://nginx.org/LICENSE) (Also see https://polarssl.org/foss-license-exception and https://twitter.com/polarssl/status/302083038261678080).
 
-Note that due to the Makefiles shipped by PolarSSL using GNU make style conditionals, GNU make must be used if --with-polarssl=path is used.
+### See Also
 
-Configuration
---------
-
-With a few exceptions configuration is identical to the standard SSL support.
-
- - ssl_protocols does not support "SSLv2".
- - ssl_engine is not a valid config option when using PolarSSL.
- - ssl_prefer_server_ciphers has no effect.
- - ssl_session_cache builtin is not supported.
- - ssl_ciphers_list expects a ':' separated list of cipher suites.
- - ssl_stapling and related options are not supported.
-
-Supported Ciphersuites
---------
-
- - TLS-RSA-WITH-RC4-128-MD5
- - TLS-RSA-WITH-RC4-128-SHA
- - TLS-RSA-WITH-3DES-EDE-CBC-SHA
- - TLS-DHE-RSA-WITH-3DES-EDE-CBC-SHA
- - TLS-RSA-WITH-AES-128-CBC-SHA
- - TLS-DHE-RSA-WITH-AES-128-CBC-SHA
- - TLS-RSA-WITH-AES-256-CBC-SHA
- - TLS-DHE-RSA-WITH-AES-256-CBC-SHA
- - TLS-RSA-WITH-AES-128-CBC-SHA256
- - TLS-RSA-WITH-AES-256-CBC-SHA256
- - TLS-DHE-RSA-WITH-AES-128-CBC-SHA256
- - TLS-DHE-RSA-WITH-AES-256-CBC-SHA256
- - TLS-RSA-WITH-CAMELLIA-128-CBC-SHA
- - TLS-DHE-RSA-WITH-CAMELLIA-128-CBC-SHA
- - TLS-RSA-WITH-CAMELLIA-256-CBC-SHA
- - TLS-DHE-RSA-WITH-CAMELLIA-256-CBC-SHA
- - TLS-RSA-WITH-CAMELLIA-128-CBC-SHA256
- - TLS-DHE-RSA-WITH-CAMELLIA-128-CBC-SHA256
- - TLS-RSA-WITH-CAMELLIA-256-CBC-SHA256
- - TLS-DHE-RSA-WITH-CAMELLIA-256-CBC-SHA256
- - TLS-RSA-WITH-AES-128-GCM-SHA256
- - TLS-RSA-WITH-AES-256-GCM-SHA384
- - TLS-DHE-RSA-WITH-AES-128-GCM-SHA256
- - TLS-DHE-RSA-WITH-AES-256-GCM-SHA384
-
-Note: This depends on what ciphers were compiled into PolarSSL at build time.  Additionally certain extremely weak ciphersuites are explicitly not supported by nginx-polarssl.
-
-Know Issues/Implementation Differences
---------
-
-nginx-polarssl Issues:
-
- - See the [github issue tracker](https://github.com/alinefr/nginx-polarssl/issues?sort=created&state=open)
-
-PolarSSL Issues:
-
- - PolarSSL 1.2.5 has a memory leak. (Fix: https://github.com/polarssl/polarssl/commit/c0463502ff89db15c9bcfee33878678b7fd14cef)
- - Support for SSL v2.0 ClientHello was removed from PolarSSL 1.2.x.  Some applications rely on this to be supported or will not handshake correctly.  This is scheduled to be fixed in a future version of PolarSSL.
-
-Implementation differences:
-
- - SSLv2.0 is not supported, and will not be supported.
- - OCSP stapling is not and more than likely will not be supported.
- - ECDH is not yet supported by PolarSSL.
-
-License
---------
-
-The changes added by nginx-polarssl are distrubuted under the [nginx license](http://nginx.org/LICENSE) (Also see https://polarssl.org/foss-license-exception and https://twitter.com/polarssl/status/302083038261678080).
-
+Original [nginx-polarssl](https://github.com/Yawning/nginx-polarssl) by Yawning Angel, and a [forked version](https://github.com/alinefr/nginx-polarssl) by Aline Freitas that this fork is based on.
