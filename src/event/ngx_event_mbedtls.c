@@ -1133,7 +1133,7 @@ static int ngx_mbedtls_write(void *context, const unsigned char *buffer, size_t 
 			case ECONNRESET:
 				return MBEDTLS_ERR_NET_CONN_RESET;
 			case EINTR:
-				return MBEDTLS_ERR_SSL_WANT_READ;
+				return MBEDTLS_ERR_SSL_WANT_WRITE;
 		}
 		errno = e;
 		return MBEDTLS_ERR_NET_RECV_FAILED;
